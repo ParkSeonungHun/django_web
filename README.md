@@ -303,6 +303,7 @@ TIME_ZONE = 'Asia/Seoul'
 앞의 실습을 잘 진행했다면 개발 서버가 종료된 상태이다.
 개발 서버를 다시 구동하자. localhost:8000으로 접속하면 초기 화면이 영어에서 한글로 바뀌어 있다.
 - 코드 : python manage.py runserver
+
 ## 12월 24일 장고의 기본 요소 익히기
 ## 주소와 화면을 연결하는 URL과 뷰 
 이제부터 파이보를 만들면서 장고의 기능을 살펴볼 것이다.
@@ -375,4 +376,145 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('pybo/', views.index),
 ]
+```
+```python
+그리고 pybo에 슬래시 /를 붙여 입력한 점에도 주목하자! 슬래시를 붙이면 사용자가 슬래시 없이 주소를 입력해도 장고가 자동으로 슬래시를 붙여 준다.
+이는 URL을 정규화하는 장고의 기능 덕분이다.
+특별한 경우가 아니라면 URL 매핑에는 호스트명과 포트를 생략하고 끝에는 슬래시를 붙이자.
+```
+- 웹 브라우저 주소창에 localhost:8000/pybo라고 입력하면 장고가 자동으로 localhost:8000/pybo/와 같이 슬래시를 붙여 준다.
+```python
+프로젝트 디렉터리는 BASE_DIR 변수에 저장되어 있다.
+
+여러분의 파이보 프로젝트 디렉터리는 C:/projects/mysite일 것이다. 장고는 이 경로를 settings.py 파일의 BASE_DIR 변수에 저장한다.
+이 책에서는 파일 경로를 언급할 때 BASE_DIR을 생략한다.
+예를 들어 config/urls.py라 언급하면 BASE_DIR의 값인 C:/projects/mysite가 생략된 것이므로
+실제 언급하는 파일 위치는 C:/projects/mysite/config/urls.py이다.
+```
+## 오류 메시지 확인하기
+```python
+다시 localhost:8000/pybo/ 에 접속해 보자.
+그러면 웹 브라우저에 ‘사이트에 연결할 수 없음’ 오류가 표시되고, 개발 서버에는 다음과 같은 오류가 표시된다.
+```
+- 명령 프롬프트
+```python
+(... 생략 ...)
+  File "c:\projects\mysite\config\urls.py", line 23, in <module>
+    path('pybo/', views.index),
+AttributeError: module 'pybo.views' has no attribute 'index'
+```
+config/urls.py 파일을 수정했음에도 이런 오류가 발생한 이유는 URL 매핑에 추가한 뷰 함수인 views.index가 없기 때문이다.
+## pybo/views.py 작성하기
+pybo/views.py 파일에 index 함수를 추가하자.
+- [파일이름: c:\projects\mysite\pybo\views.py]
+```python
+# ---------------------------------- [edit] ---------------------------------- #
+from django.http import HttpResponse
+
+
+def index(request):
+    return HttpResponse("안녕하세요 pybo에 오신것을 환영합니다.")
+# ---------------------------------------------------------------------------- #
+```
+## 첫 번째 장고 프로그램 완성!
+이제 /pybo/ 페이지에 접속하면 웹 브라우저에 “안녕하세요 pybo에 오신것을 환영합니다.”라는 문자열이 출력된다
+## 장고 개발 흐름 정리하기
+```python
+1. 웹 브라우저 주소창에 localhost:8000/pybo 입력(장고 개발 서버에 /pybo 페이지 요청).
+2. config/urls.py 파일에서 URL을 해석해 pybo/views.py 파일의 index 함수 호출.
+3. pybo/views.py 파일의 index 함수를 실행하고 그 결과를 웹 브라우저에 전달.
+```
+## URL 분리하기
+## config/urls.py 다시 살펴보기
+```python
+config/urls.py 파일을 다시 한번 살펴보자. 아까 얘기했듯이 pybo 앱 관련 파일은 대부분 pybo 디렉터리에 있다.
+하지만 매핑을 위한 urls.py 파일은 pybo 디렉터리에 없다. 
+그러므로 pybo 앱에 URL 매핑을 추가하려면 pybo 디렉터리가 아닌 config 디렉터리에 있는 urls.py 파일을 수정해야 한다.
+```
+- [파일이름: C:/projects/mysite/config/urls.py]
+```python
+from django.contrib import admin
+from django.urls import path
+from pybo import views
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('pybo/', views.index),
+]
+```
+이 방식은 프로젝트의 짜임새를 전혀 고려하지 않은 것이다. pybo 앱 관련 urls.py 파일을 따로 구성할 방법은 없을까? 물론 있다.
+## config/urls.py 수정하기
+include 함수를 임포트해 pybo/의 URL 매핑을 path('pybo/', views.index)에서 path('pybo/', include('pybo.urls'))로 수정하자.
+- [파일이름: c:\projects\mysite\config\urls.py]
+```python
+from django.contrib import admin
+# ---------------------------------- [edit] ---------------------------------- #
+from django.urls import path, include
+# ---------------------------------------------------------------------------- #
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+# ---------------------------------- [edit] ---------------------------------- #
+    path('pybo/', include('pybo.urls')),
+# ---------------------------------------------------------------------------- #    
+]
+```
+## pybo/urls.py 생성하기(파일명에는 반드시 확장자 .py가 포함되어야 한다.)
+pybo 앱 디렉터리에 urls.py 파일을 생성하자. [pybo → 마우스 오른쪽 클릭 → New → File]을 한 다음 파일명으로 urls.py를 입력
+## pybo/urls.py 수정하기
+pybo/urls.py 파일을 다음과 같이 수정하자.
+- [파일이름: C:\projects\mysite\pybo\urls.py]
+```python
+# ---------------------------------- [edit] ---------------------------------- #
+from django.urls import path
+
+from . import views
+
+urlpatterns = [
+    path('', views.index),
+]
+# ---------------------------------------------------------------------------- #
+```
+다시 /pybo/에 접속해 보자.
+## 데이터를 관리하는 모델 
+```python
+장고는 모델로 데이터를 관리한다. 모델로 데이터를 관리한다는 것은 무엇이며 어떤 이점이 있을까? 보통 웹 개발에서는 데이터의 저장 · 조회를 위해 SQL 쿼리문을 이용한다.
+이 말은 데이터 저장 · 조회를 위해서는 별도의 SQL 쿼리문을 배워야 한다는 말과 같다.
+학습 장벽이 하나 더 생기는 셈이다. 
+하지만 놀랍게도 모델을 사용하면 SQL 쿼리문을 몰라도 데이터를 저장 · 조회할 수 있다.
+모델이 무엇이길래 이렇게 파격적으로 이야기하는지 실습을 통해 알아보자.
+```
+## migrate와 테이블 알아보기
+## 장고 개발 서버 구동 시 나오는 경고 메시지 살펴보기
+모델을 알아보기 위해 python manage.py runserver 명령 실행 시 나오는 경고 메시지를 조금 더 자세히 살펴보자.
+- 명령 프롬프트
+```python
+(mysite) c:\projects\mysite>python manage.py runserver
+Watching for file changes with StatReloader
+Performing system checks...
+(생략)
+Quit the server with CTRL-BREAK.
+```
+## config/settings.py 열어 기본으로 설치된 앱 확인하기
+```python
+그러면 경고 메시지에 표시된 앱은 어디서 확인할 수 있고, 왜 경고 메시지에 언급되었을까? 
+그 이유는 config/settings.py 파일을 열어 보면 어느 정도 짐작할 수 있다. 
+파일을 열어 INSTALLED_APPS 항목을 찾아보자.
+```
+- [파일이름: C:/projects/mysite/config/settings.py]
+```python
+(... 생략 ...)
+INSTALLED_APPS = [
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+]
+(... 생략 ...)
+```
+## config/settings.py 에서 데이터베이스 정보 살펴보기
+```python
+
 ```
