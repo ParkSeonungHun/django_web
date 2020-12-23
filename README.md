@@ -56,7 +56,7 @@
 ![](/img/1221_4.png)
   
 ### 추가된 소스코드 
-## 12월 23일
+## 12월 23일 장고 개발 준비
 ## 파이썬 설치하기
 - 파이썬 공식 홈페이지 주소 : www.python.org
 ```python
@@ -201,5 +201,110 @@ Quit the server with CTRL-BREAK.
 mysite 가상 환경에 진입하려면 매번 명령 프롬프트를 실행하고 C:/venvs/mysite/Scripts 디렉터리로 이동하여 activate 명령을 수행해야 한다.
 이런 일련의 과정을 한 번에 수행할 수 있는 배치 프로그램을 만들어 귀찮음을 덜어 보자.
 ```
+## mysite.cmd 배치 파일 생성하기
+```python
+mysite.cmd 파일을 venvs 디렉터리에 만들고 다음과 같이 작성하여 저장하자.
+확장자 .cmd가 붙은 파일은 배치(batch) 파일이라 부르며, 명령어 입력과 실행을 한 번에 해주는 파일이라 생각하면 된다.
+```
+- 파일 이름 [파일 이름: C:/venvs/mysite.cmd]
+- mysite.cmd 안에 넣어야 할 소스 코드
+```python
+@echo off
+cd c:/projects/mysite
+c:/venvs/mysite/scripts/activate
+```
+배치 파일의 내용은 C:/projects/mysite 디렉터리로 이동한 다음, C:/venvs/mysite/scripts/activate 명령을 수행하라는 뜻이다.
+## 배피 파일 위치를 PATH 환경 변수에 추가하기
+```python
+1. 윈도우 + R 키를 눌러서 실행화면 띄우기
+2. sysdm.cpl 명령을 입력한 다음 <확인> 클릭
+3. ‘시스템 속성’ 창이 나타난다. 여기서 <고급> 탭을 선택하고 <환경 변수> 클릭
+4. ‘환경 변수’ 창이 나타난다. 여기서 사용자 변수 중 <Path>를 선택하고 <편집> 버튼 클릭
+5. <새로 만들기> 버튼 클릭
+6. C:/venvs(저는 c:/Users/parrk/Venvs)라는 디렉터리를 추가하고 <확인> 버튼
+7.마지막으로 다음 ‘환경 변수’ 창에서 <확인> 버튼
+```
+## PATH 환경 변수 확인하기
+```python
+이렇게 하면 환경 변수 PATH에 C:/venvs 디렉터리가 추가되어 mysite.cmd 명령을 어디서든 실행할 수 있다.
+명령 프롬프트를 다시 시작하자(그래야 변경된 환경 변수 PATH가 제대로 반영된다).
+그리고 set path 명령을 실행하여 변경된 환경 변수 PATH의 내용을 확인해 보자. 
+C:/venvs라는 디렉터리가 환경 변수 PATH에 포함되어 있으면 된다.
+```
+- 명령 프롬프트(CMD)
+```python
+C:\Users\park>set path
+Path=C:\Windows\system32; (... 생략 ...) ;C:\venvs
+PATHEXT=.COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC
+```
+## 배치 파일 실행하여 가상 환경에 진입하기
+```python
+이제 지금까지 만든 mysite 명령(배치 파일 이름)을 실행하여 가상 환경에 잘 진입하는지 확인해 보자.
+참고로 윈도우에서 확장자가 .cmd인 파일은 확장자를 빼고 입력해도 된다.
+```
+- 명령 프롬프트
+```python
+C:\Users\parky> mysite
+(mysite) C:\projects\mysite>
+```
+## 파이참 설치하고 장고 개발 서버 실행하기
+보통 파이썬과 장고 개발에 많이 사용되는 에디터는 비주얼 스튜디오 코드와 파이참이다.
+이 책에서는 파이참으로 장고 개발을 진행한다.
+## 파이참 설치하기
+윈도우용 파이참 설치 파일 주소: www.jetbrains.com/ko-kr/pycharm/download/#section=windows
+```python
+<Professional>과 <Community> 중 무료 버전인 <Community>를 선택하자. 파이참 설치 파일을 내려받은 후 설치를 진행하자.
+설치할 때 특별히 주의할 점은 없으므로 끝까지 <Next>를 선택하여 설치하면 된다.
+```
+## 파이참 실행하기
+```python
+[윈도우 키]를 누르고 프로그램 목록에서 [JetBrains → PyCharm Community Edition]을 선택하면 파이참이 실행된다.
+파이참을 처음 실행하는 독자라면 다음과 같은 설정 창이 나타날 것이다. 
+테마, 플러그인 등의 옵션은 기본값으로 선택하고 넘어가자.
+이어서 다음과 같은 창이 나오면 두 번째 메뉴인 <Open>을 선택하여 앞에서 우리가 생성한 장고 프로젝트인 C:/projects/mysite를 선택하자.
+처음 프로젝트를 만들면 mysite 디렉터리 안에 main.py 파일이 자동으로 생성될 수 있다. 파일이 있다면 삭제 후 실습을 진행하자.
+```
+## 파이참 인터프리터 설정하고 개발 서버 한글로 실행하기
+파이참으로 장고 프로젝트를 불러온 후 가장 먼저 해야 할 일은 장고 프로젝트가 바라봐야 할 파이썬 인터프리터 위치를 설정하는 것이다.
+## 현재 파이썬 인터프리터 위치 확인하기
+```python
+파이참 메뉴에서 [File → Settings]를 눌러 설정 창을 열고 [Project: mysite → Project Interpreter]를 순서대로 눌러 파이썬 인터프리터 위치를 설정할 수 있는 창을 열자.
+그런 다음 오른쪽 위에 보이는 Python Interpreter를 보자.
+아마도 파이썬을 설치한 디렉터리로 설정되어 있을 것이다.
+```
+## 파이썬 인터프리터 위치를 가상 환경 위치로 수정하기
+하지만 지금은 가상 환경을 사용하므로 파이썬 인터프리터 위치를 가상 환경 위치로 수정해야 한다.
+```python 
+1. Python Interpreter 오른쪽에 보이는 톱니바퀴 모양 아이콘을 누른 다음 <Add>를 누르자.
+2. 파이썬 인터프리터 위치를 설정할 수 있는 ‘Add Python Interpreter’ 창이 나타난다.
+3. <Existing environment>를 누른 다음 Interpreter 오른쪽에 보이는 <...>을 누르자.
+4. C:/venvs/mysite/Scripts/python.exe를 선택한 후 <OK>를 누른다.
+5. 나머지 창도 를 눌러 설정을 마치면 파이참이 mysite 가상 환경에 있는 파이썬 인터프리터를 인식하기 시작한다.
+```
+## 파이참에서 settings.py 파일 수정하기
+```python
+이제 파이참으로 장고를 개발할 준비가 완료되었다. 장고 개발을 맛보는 차원에서 장고의 설정값이 들어 있는 settings.py 파일을 수정해 보자.
+파이참에서 settings.py 파일을 열어 LANGUAGE_CODE와 TIME_ZONE 설정값을 수정하자.
+LANGUAGE_CODE를 en-us에서 ko-kr로 수정하고 TIME_ZONE을 UTC에서 Asia/Seoul로 수정했다.
+언어와 시간을 한국 값으로 바꾼 것이다.
+```
+- [파일이름: C:/projects/mysite/config/settings.py]
+```python
+(... 생략 ...)
+# ---------------------------------- [edit] ---------------------------------- #
+LANGUAGE_CODE = 'ko-kr'
 
-## 12월 24일
+TIME_ZONE = 'Asia/Seoul'
+# ---------------------------------------------------------------------------- #
+(... 생략 ...)
+```
+## 개발 서버 다시 구동하기
+앞의 실습을 잘 진행했다면 개발 서버가 종료된 상태이다.
+개발 서버를 다시 구동하자. localhost:8000으로 접속하면 초기 화면이 영어에서 한글로 바뀌어 있다.
+- 코드 : python manage.py runserver
+## 12월 24일 장고의 기본 요소 익히기
+## 주소와 화면을 연결하는 URL과 뷰 
+이제부터 파이보를 만들면서 장고의 기능을 살펴볼 것이다.
+가장 먼저 요청 URL을 어떻게 처 리하고 또 어떻게 파이썬 프로그램을 호출하는지 알아보자.
+## 앱 생성하고 확인하기
+
