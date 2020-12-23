@@ -20,6 +20,7 @@
 
 ### 12월 22일
 * 웹사이트 배포 완료 (모든 기능은 추가하지는 않음.)
+### 점프 투 장고에선 pybo 로 실습을 진행했지만 전 차이를 두기 위해 HelloWorld 라는 이름으로 실습했습니다!
 ### 12월 23일 (업로드 시작) 1장. 장고 개발 준비
 - 파이썬 설치하기
 - 장고 개발환경 준비하기
@@ -307,4 +308,71 @@ TIME_ZONE = 'Asia/Seoul'
 이제부터 파이보를 만들면서 장고의 기능을 살펴볼 것이다.
 가장 먼저 요청 URL을 어떻게 처 리하고 또 어떻게 파이썬 프로그램을 호출하는지 알아보자.
 ## 앱 생성하고 확인하기
+```python
+1장에서 mysite 프로젝트를 생성했다. 프로젝트에는 장고가 제공하는 기본 앱과 개발자(여러분)가 직접 만든 앱이 포함될 수 있으며,
+장고에서 말하는 ‘앱’은 안드로이드 앱과 성격이 다르다고 언급했다.
+그러면 장고의 앱이란 정말로 무엇일까? 우리의 파이보 서비스에 필요한 pybo(저는 HelloWorld로 만들었습니다.) 앱을 만들어 보며 알아보자.
+```
+## pybo 앱 생성하기
+명령 프롬프트에서 django-admin의 startapp 명령을 이용하여 pybo 앱을 생성
+- 명령 프롬프트
+```python
+(mysite) C:\projects\mysite>django-admin startapp pybo
+(mysite) C:\projects\mysite>
+```
+## 생성된 앱 확인하기
+```python
+1단계를 진행하면 아무런 메시지가 나타나지 않을 것이다.
+하지만 파이참에서 다음의 프로젝트 디렉터리 목록을 살펴보면 pybo라는 이름의 디렉터리가 생성되었음을 확인할 수 있다.
+```
+## 안녕하세요 파이보?
+```python
+지금부터 실습을 시작해 보자. 실습을 진행하면 파이보 서비스가 조금씩 완성될 것이다. 여기서 필자가 여러분에게 한 가지 부탁하고 싶은 것이 있다.
+결과를 보기 위해 실습을 무작정 따라 하지 않길 바란다. 결과를 보고 싶은 조급한 마음은 이해하지만,
+결과가 나온 이유를 명확하게 이해하면서 따라 해야 좋은 개발자가 될 수 있다.
+```
+## 개발 서버 구동하기
+개발 서버를 구동하자.
+- 명령 프롬프트
+```python
+(mysite) C:\projects\mysite> python manage.py runserver
+```
+## localhost:8000/pybo에 접속하기
+```python
+웹 브라우저 주소창에 다음을 입력하여 접속해 보자.
+앞으로 이 과정을 ‘페이지를 요청한다’ 또는 localhost:8000을 생략하여 ‘/pybo/를 요청한다’라고 할 것이다.
+```
+## 오류 메시지 확인하기
+그러면 ‘Page not found (404)’ 오류 페이지가 보인다.
+## config/urls.py 수정하기
+장고가 사용자의 페이지 요청을 이해할 수 있도록 config/urls.py 파일을 수정하자.
+- [파일이름: C:\projects\mysite\config\urls.py]
+```python
+from django.contrib import admin
+from django.urls import path
+# ---------------------------------- [edit] ---------------------------------- #
+from pybo import views
+# ---------------------------------------------------------------------------- #
 
+urlpatterns = [
+    path('admin/', admin.site.urls),
+# ---------------------------------- [edit] ---------------------------------- #    
+    path('pybo/', views.index),
+# ---------------------------------------------------------------------------- #    
+]
+```
+코드의 urlpatterns 변수를 보면 path 함수를 사용하여 pybo/ URL과 views.index를 매핑했다.
+views.index는 views.py 파일의 index 함수를 의미한다. 장고는 이런 식으로 URL과 뷰 함수를 매핑했다.
+## config/urls.py 다시 살펴보기
+```python
+그런데 여러분이 urlpatterns에 입력한 URL은 웹 브라우저에 입력한 localhost:8000/pybo에서 호스트명 localhost와 포트 번호 :8000이 생략된 pybo/이다.
+호스트명과 포트는 장고가 실행되는 환경에 따라 변하는 값이며 장고가 이미 알고 있는 값이다.
+그러므로 urlpatterns에는 호스트명과 포트를 입력하지 않는다.
+```
+- [urls.py 파일의 urlpatterns]
+```python
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('pybo/', views.index),
+]
+```
