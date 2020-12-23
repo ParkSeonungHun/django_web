@@ -516,5 +516,192 @@ INSTALLED_APPS = [
 ```
 ## config/settings.py 에서 데이터베이스 정보 살펴보기
 ```python
-
+살펴보는 김에 config/settings.py 파일을 조금 더 살펴보자. config/settings.py 파일에는 설치된 앱뿐만 아니라 사용하는 데이터베이스에 대한 정보도 정의되어 있다.
+DATABASES 설정 중 default의 'ENGINE' 항목을 보면 데이터베이스 엔진이 django.db.backends.sqlite3로 정의되어 있음을 알 수 있다.
+그리고 'NAME' 항목을 보면 데이터베이스는 BASE_DIR에 있는 db.sqlite3이라는 파일에 저장되는 것도 알 수 있다.
 ```
+- BASE_DIR은 프로젝트 디렉터리를 의미하며, 현재 우리의 BASE_DIR은 C:/projects/mysite이다.
+- 데이터베이스를 여러 개 사용할 때 default에 지정한 데이터베이스 외에 추가로 등록해 사용할 수 있다.
+- [파일이름: C:/projects/mysite/config/settings.py]
+```python
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
+```
+- SQLite는 파일 기반의 아주 작은 데이터베이스이다
+```python
+SQLite는 주로 소규모 프로젝트에서 사용되는 파일 기반의 가벼운 데이터베이스이다.
+보통 초기 개발 단계에서 SQLite를 사용하여 빠르게 개발하고, 
+서비스로 제공할 때 운영 환경에 어울리는 데이터베이스로 바꾼다.
+```
+## migrate 명령으로 앱이 필요로 하는 테이블 생성하기
+```python
+migrate 명령을 실행하여 경고 메시지에 있던 앱들이 필요로 하는 테이블들을 생성하자.
+명령 프롬프트에서 python manage.py migrate를 입력하면 다음과 같은 메시지가 출력된다.
+```
+- [명령 프롬프트]
+```python
+(mysite) C:\projects\mysite>python manage.py migrate
+
+Operations to perform:
+  Apply all migrations: admin, auth, contenttypes, sessions
+Running migrations:
+  Applying contenttypes.0001_initial... OK
+  Applying auth.0001_initial... OK
+(생략)
+```
+## pybo/models.py에 질문 모델 작성하기
+```python
+질문 모델을 pybo/models.py에 작성해 보자. 질문 모델은 Question 클래스로 만든다. 
+앞으로 대부분의 모델은 클래스로 만들 것이며,
+이후 책에서는 클래스명으로 모델을 언급하겠다. 
+이를테면 질문 모델은 Question 모델이라 하겠다.
+```
+- [파일이름: C:/projects/mysite/pybo/models.py]
+```python
+from django.db import models
+
+# ---------------------------------- [edit] ---------------------------------- #
+class Question(models.Model):
+    subject = models.CharField(max_length=200)
+    content = models.TextField()
+    create_date = models.DateTimeField()
+# ---------------------------------------------------------------------------- #
+```
+## pybo/models.py에 답변 모델 작성하기
+이어서 같은 파일에 Answer 모델도 작성하자.
+- [파일이름: C:/projects/mysite/pybo/models.py]
+```python
+from django.db import models
+
+
+class Question(models.Model):
+    subject = models.CharField(max_length=200)
+    content = models.TextField()
+    create_date = models.DateTimeField()
+
+# ---------------------------------- [edit] ---------------------------------- #
+class Answer(models.Model):
+    question = models.ForeignKey(Question, on_delete=models.CASCADE)
+    content = models.TextField()
+    create_date = models.DateTimeField()
+# ---------------------------------------------------------------------------- #
+```
+## config/settings.py를 열어 pybo 앱 등록하기
+- [파일이름: C:/projects/mysite/config/settings.py]
+```python
+(... 생략 ...)
+INSTALLED_APPS = [
+# ---------------------------------- [edit] ---------------------------------- #
+    'pybo.apps.PyboConfig',
+# ---------------------------------------------------------------------------- #
+    'django.contrib.admin',
+    'django.contrib.auth',
+    (... 생략 ...)
+]
+(... 생략 ...)
+```
+INSTALLED_APPS에 추가한 pybo.apps.PyboConfig 클래스는 pybo/apps.py 파일에 있는 클래스이다
+## pybo/apps.py 열어 살펴보기
+pybo/apps.py 파일을 열어 보자. 이 파일은 pybo 앱을 만들 때 자동으로 생성된 것이다. 
+- [파일이름: C:/projects/mysite/pybo/apps.py]
+```python
+from django.apps import AppConfig
+
+class PyboConfig(AppConfig):
+    name = 'pybo'
+```
+## migrate로 테이블 생성하기
+테이블을 생성을 위해 migrate 명령을 실행하자.
+- [명령 프롬프트]
+```python
+(mysite) C:\projects\mysite>python manage.py migrate
+Operations to perform:
+  Apply all migrations: admin, auth, contenttypes, sessions
+Running migrations:
+  No migrations to apply.
+  Your models have changes that are not yet reflected in a migration, and so won't be applied.
+  Run 'manage.py makemigrations' to make new migrations, and then re-run 'manage.py migrate' to apply them.
+```
+## makemigrations로 테이블 작업 파일 생성하기
+```python
+그런데 migrate 명령이 제대로 수행되지 않는다! 왜냐하면 모델이 생성되거나 변경된 경우 migrate 명령을 실행하려면 테이블 작업 파일이 필요하고,
+테이블 작업 파일을 만들려면 makemigrations 명령을 실행해야 하기 때문이다.
+makemigrations 명령을 먼저 실행하자.
+```
+- [명령 프롬프트]
+```python
+(mysite) c:\projects\mysite>python manage.py makemigrations
+Migrations for 'pybo':
+  pybo\migrations\0001_initial.py
+    - Create model Question
+    - Create model Answer
+```
+makemigrations 명령은 장고가 테이블 작업을 수행하기 위한 파일들을 생성한다.
+## makemigrations로 생성된 파일 위치 살펴보기
+makemigrations 명령을 수행하면 pybo/migrations/0001_initial.py이라는 파일이 자동으로 생성된다. 파일 위치를 확인해 보자.
+## makemigrations 한 번 더 실행해 보기
+```python
+makemigrations 명령을 한 번 더 실행해도 'No changes detected'라는 메시지만 뜬다.
+모델의 변경사항이 없다면 '모델 변경 사항 없음'이라고 알려 주는 것이다.
+```
+- [명령 프롬프트]
+```python
+(mysite) c:\projects\mysite>python manage.py makemigrations
+No changes detected
+```
+## migrate 실행하기
+```python
+이제 드디어 migrate 명령을 실행할 때가 되었다.
+이 명령을 실행하면 장고는 등록된 앱에 있는 모델을 참조하여 실제 테이블을 생성한다.
+```
+- [명령 프롬프트]
+```python
+(mysite) C:\projects\mysite>python manage.py migrate
+Operations to perform:
+  Apply all migrations: admin, auth, contenttypes, pybo, sessions
+Running migrations:
+  Applying pybo.0001_initial... OK
+```
+## 데이터 만들고 저장하고 조회하기
+```python
+지금까지 모델을 이용하여 실제 테이블을 만들었다.
+그러면 장고에서는 모델을 어떻게 사용할까? 장고 셸을 사용하면 모델 사용법을 쉽게 익힐 수 있다.
+```
+## 장고 셸 실행하기
+다음을 입력하여 장고 셸을 실행하자.
+- [명령 프롬프트]
+```python
+(mysite) C:\projects\mysite>python manage.py shell
+Python 3.8.2 (tags/v3.8.2:7b3ab59, Feb 25 2020, 22:45:29) [MSC v.1916 32 bit (Intel)] on win32
+Type "help", "copyright", "credits" or "license" for more information.
+(InteractiveConsole)
+```
+## Question, Answer 모델 임포트하기
+장고 셸을 실행했으면 다음 명령으로 Question과 Answer 모델을 장고 셸에 임포트하자.
+- [명령 프롬프트]
+>>> from pybo.models import Question, Answer
+> ## Questions 모델로 Question 모델 데이터 만들기
+```python
+Question 모델을 이용하여 Question 모델 데이터를 하나만 만들어 보자. Question 모델의 subject 속성에 제목을, content 속성에 질문 내용을 입력한다. 
+create_date 속성은 DateTimeField이므로 timezone.now()로 현재 일시를 입력한다.
+```
+- [명령 프롬프트]
+```python
+>>> from django.utils import timezone
+>>> q = Question(subject='pybo가 무엇인가요?', content='pybo에 대해서 알고 싶습니다.', create_date=timezone.now())
+>>> q.save()
+```
+이 과정을 통해 객체 q가 생성된다. 객체가 생성된 다음 q.save()를 입력하면 Question 모델 데이터 1건이 데이터베이스에 저장된다.
+## Question 모델 데이터의 id값 확인하기
+Question 모델 데이터가 잘 생성되었는지 확인해 보자. 장고는 데이터 생성 시 데이터에 id값을 자동으로 넣어준다.
+- [명령 프롬프트]
+```python
+>>> q.id
+1
+```
+## Question 모델로 Question 모델 데이터 1개 더 만들기
+
