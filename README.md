@@ -704,4 +704,42 @@ Question 모델 데이터가 잘 생성되었는지 확인해 보자. 장고는 
 1
 ```
 ## Question 모델로 Question 모델 데이터 1개 더 만들기
+이를 확인하기 위해 두 번째 Question 모델 데이터를 만들어 저장해 보자.
+- [명령 프롬프트]
+```python
+>>> q = Question(subject='장고 모델 질문입니다.', content='id는 자동으로 생성되나요?', create_date=timezone.now())
+>>> q.save()
+>>> q.id
+2
+```
+결과를 보면 두 번째로 생성한 Question 모델 데이터의 id는 예상대로 2이다.
+## Question 모델 데이터 모두 조회하기
+```python
+지금까지의 실습 과정은 모두 Question 모델 데이터를 저장하기 위한 것이었다.
+이번에는 저장된 데이터를 조회해 보자.
+여기서는 특별히 모든 Question 모델 데이터를 조회하기 위해 Questions.objects.all()을 입력한다.
+```
+- [명령 프롬프트]
+```python
+>>> Question.objects.all()
+<QuerySet [<Question: Question object (1)>, <Question: Question object (2)>]>
+```
+## Question 모델 데이터 조회 결과에 속성값 보여 주기
+그런데 위의 결과는 데이터 유형을 출력한 것이므로 사람이 보기 불편하다. 
+이때 Question 모델에 __str__ 메서드를 추가하면 된다.
+- [파일이름: C:/projects/mysite/pybo/models.py ]
+```python
+(... 생략 ...)
 
+class Question(models.Model):
+    subject = models.CharField(max_length=200)
+    content = models.TextField()
+    create_date = models.DateTimeField()
+
+# ---------------------------------- [edit] ---------------------------------- #
+    def __str__(self):
+        return self.subject
+# ---------------------------------------------------------------------------- #
+
+(... 생략 ...)
+```
