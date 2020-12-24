@@ -743,3 +743,206 @@ class Question(models.Model):
 
 (... 생략 ...)
 ```
+이렇게 수정하면 데이터 조회 시 id가 아닌 제목을 표시해 준다.
+## Question 모델 데이터 다시 조회해 보기
+```python
+모델이 수정되었으므로 장고 셸을 다시 시작하자.
+장고 셸에서 quit() 명령을 실행해 종료한 후 다시 장고 셸을 시작한다.
+그다음, Question 모델을 다시 임포트한 후 Question 모델 데이터를 조회해 보자.
+```
+- [명령 프롬프트]
+```python
+(mysite) C:\projects\mysite>python manage.py shell
+Python 3.8.2 (tags/v3.8.2:7b3ab59, Feb 25 2020, 22:45:29) [MSC v.1916 32 bit (Intel)] on win32
+Type "help", "copyright", "credits" or "license" for more information.
+(InteractiveConsole)
+>>> from pybo.models import Question, Answer
+>>> Question.objects.all()
+<QuerySet [<Question: pybo가 무엇인가요?>, <Question: 장고 모델 질문입니다.>]>
+```
+## 조건으로 Question 모델 데이터 조회하기
+```python
+이전 단계에서는 Question 모델 데이터를 모두 조회했다.
+조건을 주어 Question 모델 데이터를 조회하고 싶다면 filter 함수를 사용하면 된다.
+```
+- [명령 프롬프트]
+```python
+>>> Question.objects.filter(id=1)
+<QuerySet [<Question: pybo가 무엇인가요?>]>
+```
+```python
+filter 함수는 조건에 해당하는 데이터를 모두 찾아준다. 지금은 유일한 값인 id를 조건에 사용했으므로 Question 모델 데이터 하나만 나왔다.
+하지만 filter 함수는 1개 이상의 데이터를 반환한다.
+다만 filter 함수는 반환값이 리스트 형태인 QuerySet이므로 정말로 1개의 데이터만 조회하고 싶다면 filter 함수 대신 get 함수를 쓰는 것이 좋다.
+```
+## Question 모델 데이터 하나만 조회하기
+get 함수를 사용하면 리스트가 아닌 데이터 하나만 조회할 수 있다.
+## [명령 프롬프트]
+```python
+>>> Question.objects.get(id=1)
+<Question: pybo가 무엇인가요?>
+```
+## get으로 조건에 맞지 않는 데이터 조회하기
+조건에 맞지 않는 데이터를 get 함수로 조회하면 어떻게 될까? id가 3인 데이터를 조회해 보자.
+- 명령 프롬프트
+```python
+>>> Question.objects.get(id=3)
+Traceback (most recent call last):
+  File "<console>", line 1, in <module>
+  File "C:\venvs\mysite\lib\site-packages\django\db\models\manager.py", line 82, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+  File "C:\venvs\mysite\lib\site-packages\django\db\models\query.py", line 415, in get
+    raise self.model.DoesNotExist(
+pybo.models.Question.DoesNotExist: Question matching query does not exist.
+```
+그러면 이와 같은 오류 메시지를 볼 수 있다. 조건에 맞는 데이터 1개를 반환해야 하는데 조건에 맞는 데이터가 없으니 오류가 발생한 것이다.
+## filter로 조건에 맞지 않는 데이터 조회하기
+그러면 filter 함수는 어떨까? filter 함수로 조건에 맞지 않는 데이터를 조회해 보자.
+- 명령 프롬프트
+```python
+>>> Question.objects.filter(id=3)
+<QuerySet []>
+```
+```python
+filter 함수는 조건에 맞는 데이터가 없으면 그저 빈 QuerySet을 반환한다.
+get 함수는 반드시 1건의 데이터를 반환해야 한다는 특징이 있으므로 오류가 발생할 것이다.
+이번에는 조금 더 유용한 데이터 조회 방법을 알아보자.
+만약 제목에 '장고'라는 글자가 포함된 데이터를 조회하려면 어떻게 해야 할까?
+```
+## 제목의 일부를 이용하여 데이터 조회하기
+```python
+subject에 "장고"라는 문자열이 포함된 데이터를 조회하려면 조건에 subject__contains를 이용하면 된다.
+이때 subject와 contains 사이의 언더스코어는 1개가 아니라 2개이다.
+장고 셸에서 다음 코드를 입력해 보자.
+```
+- [명령 프롬프트]
+```python
+>>> Question.objects.filter(subject__contains='장고')
+<QuerySet [<Question: 장고 모델 질문입니다.>]>
+```
+```python
+subject__contains='장고'의 의미는 'subject 속성에 '장고'라는 문자열이 포함되어 있는가?'이다.
+이 밖에도 filter 함수의 사용 방법은 무궁무진하다. 자세한 filter 함수의 사용 방법은 장고 공식 문서를 참조하자.
+
+- 장고는 외워서 사용할 수 있는 프레임워크가 아니므로 장고 공식 문서를 자주 참고하는 습관을 들이는 것이 좋다.
+- 장고 공식 문서(데이터 조회 관련): docs.djangoproject.com/en/3.0/topics/db/queries
+```
+## 데이터 수정하기
+이번에는 지금까지 저장했던 Question 모델 데이터를 수정하자.
+## Question 모델 데이터 수정하기
+```python
+Question 모델 데이터를 수정하려면 우선 수정할 데이터를 조회해야 한다.
+다음은 id가 2인 데이터를 조회한 것이다. 이 데이터를 수정할 것이다.
+```
+- 명령 프롬프트
+```python
+>>> q = Question.objects.get(id=2)
+>>> q
+<Question: 장고 모델 질문입니다.>
+```
+## subject 속성 수정하기
+subject 속성을 수정하자.
+- 명령 프롬프트
+```python
+>>> q.subject = 'Django Model Question'
+```
+## 수정한 Question 모델 데이터 데이터베이스에 저장하기
+```python
+위의 단계만으로는 변경된 Question 모델 데이터가 데이터베이스에 적용되지 않는다.
+반드시 다음처럼 save 함수를 실행해야 변경된 Question 모델 데이터가 데이터베이스에 반영된다.
+```
+- 명령 프롬프트
+```python
+>>> q.save()
+>>> q
+<Question: Django Model Question>
+```
+## 데이터 삭제하기
+```python
+이번에는 Question 모델 데이터를 데이터베이스에서 삭제해 보자.
+```
+## Question 모델 데이터 삭제하기
+데이터 삭제는 데이터 수정과 비슷한 과정으로 진행된다. 여기서는 id가 1인 Question 모델 데이터를 삭제한다.
+- 명령 프롬프트
+```python
+>>> q = Question.objects.get(id=1)
+>>> q.delete()
+(1, {'pybo.Question': 1})
+```
+```python
+delete 함수를 수행하면 해당 데이터가 데이터베이스에서 즉시 삭제되며, 삭제된 데이터의 추가 정보가 반환된다.
+(1, {'pybo.Question': 1})에서 앞의 1은 삭제된 Question 모델 데이터의 id를 의미하고 {'pybo.Question': 1}은 삭제된 모델 데이터의 개수를 의미한다.
+
+Answer 모델을 만들 때 ForeignKey로 Question 모델과 연결한 것이 기억나는가? 만약 삭제한 Question 모델 데이터에 2개의
+Answer 모델 데이터가 등록된 상태라면 (1, {'pybo.Answer': 2, 'pybo.Question': 1})와 같이 삭제된 답변 개수도 함께 반환될 것이다.
+```
+## 삭제 확인하기
+Question 모델 데이터가 정말로 삭제되었는지 확인해 보자.
+- 명령 프롬프트
+```python
+>>> Question.objects.all()
+<QuerySet [<Question: Django Model Question>]>
+```
+결과를 보면 첫 번째 질문은 삭제되고, 두 번째 질문만 남아 있다.
+## 연결된 데이터 알아보기
+```python
+앞에서 Answer 모델을 만들 때 ForeignKey로 Question 모델과 연결한 내용이 기억날 것이다.
+Answer 모델은 Question 모델과 연결되어 있으므로 데이터를 만들 때 Question 모델 데이터가 필요하다.
+```
+## Answer 모델 데이터 만들기
+id가 2인 Question 모델 데이터를 얻은 다음, 이를 이용하여 Answer 모델 데이터를 만들어 보자.
+- 명령 프롬프트
+```python
+>>> q = Question.objects.get(id=2)
+>>> q
+<Question: Django Model Question>
+>>> from django.utils import timezone
+>>> a = Answer(question=q, content='네 자동으로 생성됩니다.', create_date=timezone.now())
+>>> a.save()
+```
+## id 확인하기
+Answer 모델 데이터에도 id가 있다.
+- 명령 프롬프트
+```python
+>>> a.id
+1
+```
+## Answer 모델 데이터 조회하기
+Answer 모델 데이터를 get 함수로 조회해 보자. 조건은 id를 사용한다.
+- 명령 프롬프트
+```python
+>>> a = Answer.objects.get(id=1)
+>>> a
+<Answer: Answer object (1)>
+```
+## 연결된 데이터로 조회하기: 답변에 있는 질문 조회하기
+```python
+Answer 모델 데이터에는 Question 모델 데이터가 연결되어 있으므로 Answer 모델 데이터에 연결된 Question 모델 데이터를 조회할 수 있다.
+```
+- 명령 프롬프트
+```python
+>>> a.question
+<Question: Django Model Question>
+```
+```python
+Answer 모델 객체인 a에는 question 속성이 있으므로 a를 통해 질문을 찾는 것은 매우 쉽다.
+그렇다면 반대로 질문을 통해 답변을 찾을 수 있을까?
+Question 모델에는 답변 속성이 없어서 불가능할 것 같지만 실제로는 가능하다.
+```
+## 연결된 데이터로 조회하기: 질문을 통해 답변 찾기
+다음처럼 answer_set을 사용하면 된다.
+- 명령 프롬프트
+```python
+>>> q.answer_set.all()
+<QuerySet [<Answer: Answer object (1)>]>
+```
+```python
+Question 모델과 Answer 모델처럼 서로 연결되어 있으면 연결모델명_set과 같은 방법으로 연결된 데이터를 조회할 수 있다. 
+그리고 아마 여러분은 연결모델명_set을 써야 하는 경우와 그렇지 않은 경우가 헷갈릴 것이다.
+```
+```python
+이때는 질문과 답변이 달리는 게시판을 상식적으로 생각해 보자. 질문 1개에는 1개 이상의 답변이 달릴 수 있으므로 질문에 달린 답변은 q.answer_set으로 조회해야 한다
+(답변 세트를 조회). 답변은 질문 1개에 대한 것이므로 애초에 여러 개의 질문을 조회할 수 없다. 다시 말해 답변 1개 입장에서는 질문 1개만 연결되어 있으므로 a.question만 실행할 수 있다.
+1개의 답변으로 여러 개의 질문을 a.question_set으로 조회하는 것은 불가능하며,
+상식적으로 생각해 보아도 이상하다. 연결모델명_set은 정말 신통방통한 장고의 기능이 아닐 수 없다. 연결모델명_set은 자주 사용할 기능이니 꼭 기억하자.
+```
