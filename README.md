@@ -37,7 +37,23 @@
 - 부트스트랩으로 더 쉽게 화면 꾸미기
 - 표준 HTML과 템플릿 상속 사용해 보기
 - 질문 등록 기능 만들기
-
+### 12월 25일 3장. 파이보 서비스 개발!
+- 내비게이션 기능 추가하기
+- 게시판 페이징 기능 추가하기
+- 템플릿 필터 직접 만들어 보기
+- 질문에 달린 답변 개수 표시하기
+- 로그인 로그아웃 구현하기
+- 회원가입 구현하기
+- 모델에 글쓴이 추가하기
+- 글쓴이 표시하기
+- 게시물 수정 & 삭제 기능 추가하기
+- 댓글 기능 추가하기
+### 12월 26일 4장. 세상에 선보이는 파이보 서비스!
+- 깃으로 버전 관리하기
+- 깃허브 사용해 보기
+- 파이보를 위한 서버 운영 방법 알아보기
+- AWS 라이트세일 공개하기
+- 세상에 파이보 공개하기
 
 
 
@@ -946,6 +962,70 @@ Question 모델과 Answer 모델처럼 서로 연결되어 있으면 연결모�
 1개의 답변으로 여러 개의 질문을 a.question_set으로 조회하는 것은 불가능하며,
 상식적으로 생각해 보아도 이상하다. 연결모델명_set은 정말 신통방통한 장고의 기능이 아닐 수 없다. 연결모델명_set은 자주 사용할 기능이니 꼭 기억하자.
 ```
+
+장고 Admin을 사용하려면 슈퍼 유저를 먼저 생성해야 한다. 슈퍼 유저는 쉽게 말해 장고 운영자 계정이라 생각하면 된다.
+## 슈퍼유저 생성하기
+
+명령 프롬프트에서 python manage.py cratesuperuser 명령을 실행하여 슈퍼 유저를 생성하자.
+사용자 이름에는 admin을 입력하고(다른 것을 입력해도 된다.), 이메일 주소는 가상의 이메일 주소를 적는다.
+비밀번호는 여러분이 기억하기 쉬운 것으로 입력하자. 이때 단순한 구성의 비밀번호를 입력하면 경고 메세지가 나올 텐데, 이를 무시하는 옵션으로 'Bypass password validation and crate user anyway?'의 질문에 y를 입력해 답하자.
+여기서는 학습을 위해 비밀번호를 단순하게 입력했다. 만약 실제 사이트를 운영할 계획이라면 보안에 취약한 비밀번호는 사용하면 안되므로 주의하자.
+
+- 명령프롬프트
 ```python
 
+
+(mysite) c:\projects\mysite> python manage.py cratesuperuser
+사용자  이름 (leave blank to use 'pahke'): admin
+이메일 주소: admin@mysite.com
+Password:
+password (again):
+비밀번호가 너무 짧습니다. 최소 8 문자를 포함해야 합니다.
+비밀번호가 너무 일상적인 단어입니다.
+비밀번호가 전부 숫자로 되어 있습니다.
+Bypass password validation and crate user anyway? [y/N]: y
+Superuser created successfully.
+
+여기서는 다음과 같은 정보로 슈퍼 유저를 생성했다.
+
+항목 값
+사용자명 admin
+이메일 주소 admin@mysite.com
+Password 1111
 ```
+## 장고 Admin에 접속해 로그인하기
+1단계를 통해 슈퍼 유저가 생성되었으니 장고 개발 서버를 구동한 후 localhost:8000/admin에 접속해 보자.
+![](/img/1224_1.png)
+[장고 Admin 로그인 화면]
+
+그리고 앞에서 입력한 사용자명과 비밀번호를 입력해 로그인까지 진행하면 다음과 같은 화면이 나타난다.
+![](/img/1224_2.png)
+[장고 Admin 로그인 후 볼 수 있는 화면]
+
+장고 Admin에서는 현재 등록된 그룹 및 사용자에 대한 정보 확인과 수정을 할 수 있다. 물론 그룹은 아직 등록하지 않았으므로 클릭해서 조회해 보아도 아무것도 표시되지 않는다. 그러면 본격적으로 장고 Admin의 재미있는 기능을 알아보자.
+
+## 장고 Admin 모델 관리하기
+우리는 Question, Answer 모델을 만들었다. 이 모델들을 장고 Admin에 등록하면 손쉽게 모델을 관리할 수 있다. 쉽게 말해 장고 셸로 수행했던 데이터 저장, 수정, 삭제 등의 작업을 장고 Admin에서 할 수 있다.
+장고 Admin에서 어떤 마법이 벌어지는지 살펴보자. pybo/admin.py 파일을 열고 다음과 같이 코드를 입력하여 Question 모델을 장고 Admin에 등록하자.
+
+```python
+[파일이름: C:/projects/mysite/pybo/admin.py
+
+from django.contrib import admin
+from .models import Question
+
+# ---------------------------------- [edit] ---------------------------------- #
+class QuestionAdmin(admin.ModelAdmin):
+    search_fields = ['subject']
+
+admin.site.register(Question, QuestionAdmin)
+```
+## 장고 Admin에서 데이터 검색해 보기
+장고 Admin으로 돌아가서 새로고침을 하면 검색 기능이 추가되었음을 알수있따. 검색어로 '장고'를 입력하고 <검색>을 눌러보자.
+
+![](/img/1224_3.png)
+[장고 검색 시 볼 수 있는 화면]
+그러면 제목에 '장고'가 포함된 Question 모델 데이터만 조회된다. 장고 Admin에는 이런 마법 같은 기능이 무궁무진하다.
+
+장고 Admin의 기능이 궁금하다면 장고 공식 문서를 참고하자. 장고 공식 문서 주소(장고 Admin 기능):
+docs.djangoproject.com/en/3.0/ref/contrib/admin
