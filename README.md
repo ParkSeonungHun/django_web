@@ -1028,6 +1028,7 @@ admin.site.register(Question, QuestionAdmin)
 ![](/img/1224_3.png)
 
 [장고 검색 시 볼 수 있는 화면]
+
 그러면 제목에 '장고'가 포함된 Question 모델 데이터만 조회된다. 장고 Admin에는 이런 마법 같은 기능이 무궁무진하다.
 
 장고 Admin의 기능이 궁금하다면 장고 공식 문서를 참고하자. 장고 공식 문서 주소(장고 Admin 기능):
