@@ -1033,3 +1033,28 @@ admin.site.register(Question, QuestionAdmin)
 
 장고 Admin의 기능이 궁금하다면 장고 공식 문서를 참고하자. 장고 공식 문서 주소(장고 Admin 기능):
 docs.djangoproject.com/en/3.0/ref/contrib/admin
+
+## 질문 목록 기능 구현하기
+질문 목록 조회를 위해 pybo/views.py 파일을 열어 코드를 조금씩 수정해보자.
+
+[1] Question 모델 데이터 작성일시 역순으로 조회하기
+
+Question 모델을 임포트해 Question 모델 데이터를 작성한 날짜의 역순으로 조회하기 위해 order_by 함수를 사용했다. 조회한 Question 모델 데이터는 context 변수에 저장했다. context 변수는 조금 후에 설명할 render 함수가 템플릿을 HTML로 변환하는 과정에서 사용되는 데이터이다.
+
+```python
+from django.http import HttpResponse
+# ---------------------------------- [edit] ---------------------------------- #
+from .models import Question
+# ---------------------------------------------------------------------------- #
+
+def index(request):
+# ---------------------------------- [edit] ---------------------------------- #
+    """
+    pybo 목록 출력
+    """
+
+    question_list = Question.objects.order_by('-crate_date')
+    context = {'question_list': question_list}
+# ---------------------------------------------------------------------------- # 
+    return HttpResponse("안녕하세요 pybo에 오신걸 환영합니다.")
+```
