@@ -1058,3 +1058,53 @@ def index(request):
 # ---------------------------------------------------------------------------- # 
     return HttpResponse("안녕하세요 pybo에 오신걸 환영합니다.")
 ```
+order_by 함수는 조회한 데이터를 특정 속성으로 정렬하며, '-create_date'는 - 기호가 앞에 붙어 있으므로 작성일시의 역순을 의미한다.
+
+[2] render로 화면 출력하기
+
+조회한 Question 모델 데이터를 템플릿 파일을 사용하여 화면에 출력할 수 있는 render 함수를 사용해 보자.
+
+``` python
+# ---------------------------------- [edit] ---------------------------------- #
+from django.shortcuts import render
+# ---------------------------------------------------------------------------- #
+from .models import Question
+
+
+def index(request):
+    """
+    pybo 목록출력
+    """
+    question_list = Question.objects.order_by('-create_date')
+    context = {'question_list': question_list}
+# ---------------------------------- [edit] ---------------------------------- #
+    return render(request, 'pybo/question_list.html', context)
+# ---------------------------------------------------------------------------- #
+```
+[3] 템플릿을 모아 저장할 디렉터리 만들기
+
+템플릿을 만들기 전에 템플릿을 저장할 디렉터리를 루트 디렉터리 바로 밑에 만든다.
+
+* 루트디렉터리는 장고 프로젝트 디렉터리(C:/projects/mysite)를 의미한다.
+```python
+(mysite) c:\projects\mysite>mkdir templates
+```
+
+[4] 템플릿 디렉터리 위치 config/settings.py에 등록하기
+
+위에서 만든 템플릿 디렉터리르 장고 config/setting.py 파일에 등록하자. config/settings.py 파일을 열어 TEMPLATES 항목을 다음과 같이 수정한다.
+
+```python
+(... 생략 ...)
+TEMPLATES = [
+    {
+        (... 생략 ...)
+# ---------------------------------- [edit] ---------------------------------- #
+        'DIRS': [BASE_DIR / 'templates'],
+# ---------------------------------------------------------------------------- #
+        (... 생략 ...)
+    },
+]
+(... 생략 ...)
+```
+DIRS에는 템플릿 디렉터리를 여러 개 등록할 수 있다. 다만 현재 우리가 개발하는 파이보는 1개의 템플릿 디렉터리를 쓸 것이므로 BASE_DIR / 'templates'만 더 붙여 C:/projects/mysite/templates를 반환한다.
