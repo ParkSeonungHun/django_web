@@ -1196,6 +1196,1020 @@ DIRS에는 템플릿 디렉터리를 여러 개 등록할 수 있다. 다만 현
 
 오류 화면이 나타난 이유는 /pybo/2/에 대한 URL 매핑을 추가하지 않았기 때문이다.
 
-- 질문을 눌렀을 때 /pybo/2/와 같은 주소로 이동한 이유는 템플릿에서 href 엘리먼트에 link 속성을 <a href="/pybo/{{ question.id }}/">으로 지정했기 때문이다.
+- 질문을 눌렀을 때 /pybo/2/와 같은 주소로 이동한 이유는 템플릿에서 href 엘리먼트에 link 속성을 추가했기 때문이다.
 
-### [2] pybo
+
+### [2] pybo/views.py 열어 화면 추가하기
+pyvo/views.py 파일을 열어 detail 함수를 추가한다.
+```python
+# ---------------------------------- [edit] ---------------------------------- #
+def detail(request, question_id):
+    """
+    pybo 내용 출력
+    """
+    question = Question.objects.get(id=question_id)
+    context = {'question': question}
+    return render(request, 'pybo/question_detail.html', context)
+# ---------------------------------------------------------------------------- #
+```
+추가된 내용은 앞에서 만든 index 함수와 크게 다르지 않다. detail 함수의 매개변수 question_id가 추가된 점이 다르다. 바로 이것이 URL 매핑에 있떤 question_id이다. 즉, /pybo/2/ 페이지가 호출되면 최종으로 detail 함수의 매개변수 question_id에 2가 전달된다.
+
+![](/img/2-04_4.png)
+
+/pybo/2/ 페이지호출 시 장고에서 벌어지는 일
+
+### [4] pybo/question_detail.html 작성하기
+위에서 render 함수가 question_detail.html 파일을 사용하고 있으므로 이에 대한 작업도 해야 한다. templates/pybo 디렉터리에 question_detail.html 파일을 만든 후 다음처럼 코드를 작성한다.
+```python
+<!-- ------------------------------- [edit] -------------------------------- -->
+<h1>{{ question.subject }}</h1>
+
+<div>
+    {{ question.content }}
+</div>
+<!-- ----------------------------------------------------------------------- -->
+```
+{{ question.subject }}, {{ question.content }}의 question 객체는 detail 함수에서 render 함수에 전달한 context에 저장한 데이터이다.
+
+### [5] 질문 상세 페이지에 접속해 보기
+/pybo/2/에 접속해 보자. 그러면 질문 상세 화면이 나타난다! 축하한다!
+
+![](/img/2-04_5.png)
+
+[/pybo/2/에 제대로 접속된 화면]
+
+## 오류 화면 구현하기
+지금까지 질문 목록, 질문 상세 기능을 구현했다. 그런데 사용자가 잘못된 주소에 접속하면 어떻게 처리해야 할까?
+
+### [1] 잘못된 주소에 접속해 보기
+/pybo/30/에 접속해 보자. 그러면 다음과 같은 DoesNotExist 오류 화면이 나온다.
+
+![](/img/2-04_6.png)
+
+[/pybo/30/ 페이지 호출 시 나타나는 오류 화면]
+
+당연한 오류이다. question_id가 30인 데이터를 조회하는 Question.object.get(id=30)에서 오류가 발생했기 때문이다.
+
+![](/img/2-04_7.png)
+
+- 참고로 현재는 config/settings.py의 DEBUG 항목이 True로 설정되어 있어 개발자에게 여러 정보를 알려 주는 오류 화면이 나타난다. 그런데 실제 서비스 화면에는 그런 중요한 정보가 표현되면 안 된다. 그래서 서비스를 할 때는 DEBUG 항목을 False로 설정한다.
+- cofing/settings.py의 DEBUG 항목을 False로 설정하는 부분은 4장에서 자세히 다룬다.
+### [2] 페이지가 존재하지 않음(404 페이지) 출력하기
+존재하지 않는 페이지에 접속하면 오류 대신 404 페이지를 출력하도록 detail 함수를 수정하자. Question.objects.get(id=question_id)를 get_object_or_404(Question, pk=question_id)로 수정하면 된다.
+```python
+# ---------------------------------- [edit] ---------------------------------- #
+from django.shortcuts import render, get_object_or_404
+# ---------------------------------------------------------------------------- #
+
+(... 생략 ...)
+
+def detail(request, question_id):
+    """
+    pybo 내용 출력
+    """
+# ---------------------------------- [edit] ---------------------------------- #    
+    question = get_object_or_404(Question, pk=question_id)
+# ---------------------------------------------------------------------------- #    
+    context = {'question': question}
+    return render(request, 'pybo/question_detail.html', context)
+```
+get_object_or_404 함수는 모델의 기본키를 이용하여 모델 객체 한 건을 반환한다. pk에 해당하는 건이 없으면 오류 대신 404 페이지를 반환한다.
+
+### [3] 404 페이지 출력 확인하기
+/pybo/30/에 접속하면 404 페이지가 출력된다.
+
+![](/img/2-04_8.png)
+
+[get_object_or_404 함수로 나타나는 404 페이지]
+
+웹 브라우저는 HTTP 요청을 하고, 장고는 그 요청에 응답을 한다. 보통의 경우에는 성공을 의미하는 200 응답 코드가 자동으로 반환된다. 하지만 요청하는 페이지가 없거나 서버에서 오류가 발생하면 다음과 같은 응답 코드가 반환된다.
+
+200 : 성공
+
+500 : 서버오류(Internal Server Error)
+
+404 : 페이지 존재하지 않음(Not Found)
+
+#### 장고 제네릭뷰 간단 소개
+제네릭뷰(generic view)는 목록 조회나 상세 조회처럼 특정 패턴이 있는 뷰를 작성할 때 사용하는 매우 편리한 기능이다. 하지만 장고 입문자에게는 제네릭뷰의 실행 방식이 무척 이해하기 어렵다. 여러분에게는 제네릭뷰가 오히려 장고 학습에 혼란을 줄 수 있으므로 코너로 소개한다. 눈으로 코드를 살펴보기만 하자. 만약 우리가 views.py 파일에 작성한 index 함수나 detail 함수를 제네릭뷰로 변경하면 다음처럼 간략하게 작성할 수 있다.
+```python
+class IndexView(generic.ListView):
+    """
+    pybo 목록 출력
+    """
+    def get_queryset(self):
+        return Question.objects.order_by('-create_date')
+
+
+class DetailView(generic.DetailView):
+    """
+    pybo 내용 출력
+    """
+    model = Question
+```
+IndexView 클래스가 index 함수를 대체하고 DetailView 클래스가 detail 함수를 대체했다고 생각하면 된다. IndexView 클래스는 템플릿명이 명시적으로 지정되지 않으면 자동으로 모델명_list.html를 템플릿명으로 사용한다. 정리하자면 Question 모델을 사용하는 IndexView 클래스는 question_list.html, DetailView 클래스는 question_detail.html을 템플릿명으로 사용한다. 이어서 urls.py 파일은 다음과 같이 변경해야 한다.
+```python
+from django.urls import path
+
+from . import views
+
+app_name = 'pybo'
+urlpatterns = [
+    path('', views.IndexView.as_view()),
+    path('<int:pk>/', views.DetailView.as_view()),
+]
+```
+이렇듯 단순 모델의 목록 조회나 상세 조회는 제네릭뷰를 사용하면 매우 간편하다. 단 제네릭뷰는 복잡한 문제를 해결할 때 오히려 개발 난이도를 높이는 경우도 있으니 주의해야 한다.
+
+## URL 더 똑똑하게 사용하기
+이번에는 템플릿에서 사용한 URL 하드 코딩을 없애는 방법에 대해 알아보자. 그나저나 URL 하드 코딩이란 무엇일까? 잠시 question_list.html 템플릿에 사용된 href값을 보자.
+```python
+<li><a href="/pybo/{{ question.id }}/">{{ question.subject }}</a></li>
+```
+/pybo/{{ question.id }}는 질문 상세를 위한 URL 규칙이다. 하지만 이런 URL 규칙은 프로그램을 수정하면서 /pybo/question/2/ 또는 /pybo/2/question/으로 수정될 가능성도 있다. 이런 식으로 URL 규칙이 자주 변경된다면 템플릿에 사용된 모든 href값들을 일일이 찾아 수정해야 한다. URL 하드 코딩의 한계인 셈이다. 이런 문제를 해결하려면 해당 URL에 대한 실제 주소가 아닌 주소가 매핑된 URL 별칭을 사용해야 한다.
+
+## URL 별칭으로 URL 하드 코딩 문제 해결하기
+그러면 URL 별칭을 파이보에 적용해 보자.
+
+### [1] pybo/urls.py 수정하여 URL 별칭 사용하기
+템플릿의 href에 실제 주소가 아니라 URL 별칭을 사용하려면 우선 pybo/urls.py 파일을 수정해야 한다. path 함수에 있는 URL 매핑에 name 속성을 부여하자.
+```python
+from django.urls import path
+
+from . import views
+
+urlpatterns = [
+# ---------------------------------- [edit] ---------------------------------- #
+    path('', views.index, name='index'),
+    path('<int:question_id>/', views.detail, name='detail'),
+# ---------------------------------------------------------------------------- #    
+]
+```
+이렇게 수정하면 실제 주소 /pybo/는 index라는 URL 별칭이, /pybo/2/는 detail이라는 URL 별칭이 생긴다.
+
+### [2] pybo/question_list.html 템플릿에서 URL 별칭 사용하기
+1단계에서 만든 별칭을 템플릿에서 사용하기 위해 /pybo/{{ question.id }}를 {% url 'detail' question.id %}로 변경하자.
+- question.id는 URL 매핑에 정의된 <int: question_id>를 의미한다.
+```python
+(... 생략 ...)
+    {% for question in question_list %}
+<!-- ------------------------------- [edit] -------------------------------- -->
+        <li><a href="{% url 'detail' question.id %}">{{ question.subject }}</a></li>
+<!-- ----------------------------------------------------------------------- -->
+    {% endfor %}
+(... 생략 ...)
+```
+## URL 네임스페이스 알아보기
+여기서 한 가지 더 생각할 문제가 있다. 현재의 프로젝트에서는 pybo 앱 하나만 사용하지만, 이후 pybo 앱 이외의 다른 앱이 프로젝트에 추가될 수도 있다. 이때 서로 다른 앱에서 같은 URL 별칭을 사용하면 중복 문제가 생긴다.
+
+![](/img/2-05_1.png)
+
+이 문제를 해결하려면 pybo/urls.py 파일에 네임스페이스(namespace)라는 개념을 도입해야 한다. 네임스페이스는 쉽게 말해 각각의 앱이 관리하는 독립된 이름 공간을 말한다.
+
+### [1] pybo/urls.py에 네임스페이스 추가하기
+pybo/urls.py 파일에 네임스페이스를 추가하려면 간단히 app_name 변수에 네임스페이스 이름을 저장하면 된다.
+```python
+from django.urls import path
+
+from . import views
+
+# ---------------------------------- [edit] ---------------------------------- #
+app_name = 'pybo'
+# ---------------------------------------------------------------------------- #
+
+urlpatterns = [
+    path('', views.index, name='index'),
+    path('<int:question_id>/', views.detail, name='detail'),
+]
+```
+네임스페이스 이름으로 'pybo'를 저장했다.
+
+### [2] 네임스페이스 테스트하기 - 오류 발생!
+/pybo/에 접속해 보자. 그러면 다음과 같은 오류가 발생한다.
+
+![](/img/2-05_2.png)
+
+[/pybo/ 페이지 요청 시 발생하는 네임스페이스 오류]
+
+### [3] pybo/question_list.html 수정하기
+오류가 발생한 이유는 템플릿에서 아직 네임스페이스를 사용하고 있지 않기 때문이다. {% url 'detail' question.id %}을 {% url 'pybo:detail' question.id %}으로 바꾸자.
+```python
+(... 생략 ...)
+    {% for question in question_list %}
+<!-- ------------------------------- [edit] -------------------------------- -->
+        <li><a href="{% url 'pybo:detail' question.id %}">{{ question.subject }}</a></li>
+<!-- ----------------------------------------------------------------------- -->        
+    {% endfor %}
+(... 생략 ...)
+```
+detail에 pybo라는 네임스페이스를 붙여준 것이다.
+
+#### URL 별칭은 여러 곳에서 사용된다.
+URL 별칭은 템플릿 외에도 여러 곳에서 사용된다. 예를 들어 URL 별칭은 redirect 함수에도 사용된다. 다음은 redirect 함수에서 pybo:detail을 사용한 예이다. 지금은 눈으로 살펴보고 넘어가자.
+```python
+redirect('pybo:detail', question_id=question.id)
+```
+## 답변 등록 기능 만들기
+앞에서 질문 등록, 조회 기능을 만들었다. 이번에는 답변 등록과 답변을 보여주는 기능을 만들어 보자.
+
+## 답변 저장하고 표시하기
+### [1] 질문 상세 템플릿에 답변 등록 버튼 만들기
+
+질문 상세 템플릿 pybo/question_detail.html 파일을 수정하자. form 엘리먼트 안에 textarea 엘리먼트와 input 엘리먼트를 포함시켜 답변 내용, 답변 등록 버튼을 추가하자.
+
+- 장고 개발 시 form 데이터를 전송할 때는 보통 장고의 폼을 이용한다. 장고의 폼을 이용하는 방법은 조금 더 공부한 후 설명하겠다.
+```python
+<h1>{{ question.subject }}</h1>
+
+<div>
+    {{ question.content }}
+</div>
+
+<!-- ------------------------------- [edit] -------------------------------- -->
+<form action="{% url 'pybo:answer_create' question.id %}" method="post">
+{% csrf_token %}
+<textarea name="content" id="content" rows="15"></textarea>
+<input type="submit" value="답변등록">
+</form>
+<!-- ----------------------------------------------------------------------- -->
+```
+<답변 등록> 버튼을 누를 때 호출되는 URL은 action 속성에 있는 {% url 'pybo:answer_create' question.id %}이다. 그리고 form 엘리먼트 바로 아래에 있는 {% csrf_token %}이 눈에 띌 것이다. 이 코드는 보안 관련 항목이니 좀 더 자세히 설명하겠다. {% csrf_token %}는 form 엘리먼트를 통해 전송된 데이터(답변)가 실제로 웹 브라우저에서 작성된 데이터인지 판단하는 검사기 역할을 한다. 그러므로 <form ...> 태그 바로 밑에 {% csrf_token %}을 항상 입력해야 한다. 해킹처럼 올바르지 않은 방법으로 데이터가 전송되면 서버에서 발행한 csrf_token값과 해커가 보낸 csrf_token값이 일치하지 않으므로 오류를 발생시켜 보안을 유지할 수 있다.
+
+#### csrf_token은 장고의 기본 기능이다
+csrf_token을 사용하려면 장고에 CsrfViewMiddleware라는 미들웨어를 추가해야 한다. 하지만 이 미들웨어는 장고 프로젝트 생성 시 자동으로 config/settings.py 파일의 MIDDLEWARE라는 항목에 추가되므로 여러분이 직접 입력할 필요는 없다.
+```python
+(... 생략 ...)
+MIDDLEWARE = [
+    (... 생략 ...)
+    'django.middleware.csrf.CsrfViewMiddleware',
+    (... 생략 ...)
+]
+(... 생략 ...)
+```
+혹시라도 csrf_token을 사용하고 싶지 않다면 config/settings.py 파일의 MIDDLEWARE 항목에서 해당 코드를 주석 처리하면 되겠지만, csrf_token 기능을 굳이 제외할 필요는 없다.
+
+### [2] 질문 상세 페이지에 접속해 보기
+위의 단계를 마친 다음 pybo/2에 접속해 보자. 그러면 아마도 'answer_create를 찾을 수 없다'는 오류 화면이 나타날 것이다.
+
+![](/img/2-06_1.png)
+
+오류 발생 이유는 1단계에서 입력한 form 엘리먼트의 action 속성에 있는 {% url 'pybo:answer_create' question.id %}에 해당하는 URL 매핑이 없기 때문이다.
+
+### [3] 답변 등록을 위한 URL 매핑 등록하기
+pybo/urls.py 파일에 답변 등록을 위한 URL 매핑을 등록하자.
+
+```python
+(... 생략 ...)
+urlpatterns = [
+    path('', views.index, name='index'),
+    path('<int:question_id>/', views.detail, name='detail'),
+# ---------------------------------- [edit] ---------------------------------- #
+    path('answer/create/<int:question_id>/', views.answer_create, name='answer_create'),
+# ---------------------------------------------------------------------------- #    
+]
+(... 생략 ...)
+```
+이 코드는 사용자가 상세 화면에서 <질문답변> 버튼을 눌렀을 때 작동할 form 엘리먼트의 /pybo/answer/create/2/에 대한 URL 매핑을 추가한 것이다.
+
+### [4] answer_create 함수 추가하기
+form 엘리먼트에 입력된 값을 받아 데이터베이스에 저장할 수 있도록 answer_create 함수를 pybo/views.py 파일에 추가하자.
+
+```python
+from django.shortcuts import render, get_object_or_404
+from .models import Question
+# ---------------------------------- [edit] ---------------------------------- #
+from django.utils import timezone
+
+(... 생략 ...)
+
+def answer_create(request, question_id):
+    """
+    pybo 답변등록
+    """
+    question = get_object_or_404(Question, pk=question_id)
+    question.answer_set.create(content=request.POST.get('content'), create_date=timezone.now())
+# ---------------------------------------------------------------------------- #
+```
+answer_create 함수의 question_id 매개변수에는 URL 매핑 정보값이 넘어온다. 예를 들어 /pybo/answer/create/2가 요청되면 question_id에는 2가 넘어온다. request 매개변수에는 pybo/question_detail.html에서 textarea에 입력된 데이터가 파이썬 객체에 담겨 넘어온다. 이 값을 추출하기 위한 코드가 바로 request.POST.get('content')이다. 그리고 Question 모델을 통해 Answer 모델 데이터를 생성하기 위해 question.answer_set.create를 사용했다.
+
+- request.POST.get('content')는 POST 형식으로 전송된 form 데이터 항목 중 name이 content인 값을 의미한다.
+- Answer 모델이 Question 모델을 Foreign Key로 참조하고 있으므로 question.answer_set 같은 표현을 사용할 수 있다.
+
+#### Answer 모델을 통해 데이터를 저장할 수도 있다
+본 실습에서는 Answer 모델 데이터 저장을 위해 Question 모델을 사용했다. 하지만 Answer 모델을 직접 사용해도 Answer 모델 데이터를 저장할 수 있다.
+
+[Answer 모델로 Answer 모델 데이터 저장하는 예]
+```python
+question = get_object_or_404(Question, pk=question_id)
+answer = Answer(question=question, content=request.POST.get('content'), create_
+date=timezone.now())
+answer.save()
+```
+
+### [5] 답변 등록 후 상세 화면으로 이동하게 만들기
+답변을 생성한 후 상세 화면을 호출하려면 redirect 함수를 사용하여 코드를 작성하면 된다. redirect 함수는 함수에 전달된 값을 참고하여 페이지 이동을 수행한다. redirect 함수의 첫 번째 인수에는 이동할 페이지의 별칭을, 두 번째 인수에는 해당 URL에 전달해야 하는 값을 입력한다.
+
+```python
+# ---------------------------------- [edit] ---------------------------------- #
+from django.shortcuts import render, get_object_or_404, redirect
+# ---------------------------------------------------------------------------- #
+from .models import Question
+from django.utils import timezone
+
+(... 생략 ...)
+
+def answer_create(request, question_id):
+    """
+    pybo 답변등록
+    """
+    question = get_object_or_404(Question, pk=question_id)
+    question.answer_set.create(content=request.POST.get('content'), create_date=timezone.now())
+# ---------------------------------- [edit] ---------------------------------- #    
+    return redirect('pybo:detail', question_id=question.id)
+# ---------------------------------------------------------------------------- #
+```
+질문 상세 페이지에 다시 접속해 보자. 그러면 다음처럼 답변을 등록할 수 있는 창과 <답변등록> 버튼이 보인다.
+
+![](img/2-06_2.png)
+
+화면이 조금 엉성하다고 실망할 것 없다. 일단 핵심 기능을 완성한다 생각하고 넘어가자. 화면 다듬기는 기능을 완성한 후 진행할 것이다.
+
+텍스트 창에 아무 값이나 입력하고 <답변등록>을 눌러 보자. 아마 아무런 변화가 없을 것이다. 왜냐하면 아직 등록한 답변을 표시하는 기능을 추가하지 않았기 때문이다. 이어서 답변 표시 기능을 만들어 보자.
+
+### [6] 등록된 답변 표시하기
+질문 상세 화면에 답변을 표시하려면 pybo/question_detail.html 파일을 수정해야 한다.
+```python
+<h1>{{ question.subject }}</h1>
+
+<div>
+    {{ question.content }}
+</div>
+
+<!-- ------------------------------- [edit] -------------------------------- -->
+<h5>{{ question.answer_set.count }}개의 답변이 있습니다.</h5>
+<div>
+    <ul>
+    {% for answer in question.answer_set.all %}
+        <li>{{ answer.content }}</li>
+    {% endfor %}
+    </ul>
+</div>
+<!-- ----------------------------------------------------------------------- -->
+
+<form action="{% url 'pybo:answer_create' question.id %}" method="post">
+{% csrf_token %}
+<textarea name="content" id="content" rows="15"></textarea>
+<input type="submit" value="답변등록">
+</form>
+```
+question.answer_set.count는 답변 개수를 의미한다. 질문 내용과 답변 입력 창 사이에 답변 표시 영역을 추가했다. 코드를 위처럼 수정한 후에 질문 상세 페이지에 접속하면 다음과 같은 화면을 볼 수 있다.
+
+![](img/2-06_3.png)
+
+축하한다! 파이보의 답변 저장, 답변 조회 기능을 완성했다.
+
+지금까지 질문과 답변을 등록하고 조회하는 기능을 만들었다. 그런데 그럴싸한 화면이 아니라서 아쉽다. 여기서는 스타일시트를 이용해 웹 페이지에 디자인을 적용하는 방법을 알아본다.
+
+## 웹 페이지에 스타일시트 적용하기
+웹 페이지에 디자인을 적용하려면 스타일시트(CSS)를 사용해야 하며, 스타일시트를 파이보에 적용하려면 CSS 파일이 스태틱(static) 디렉터리에 있어야 한다.
+- CSS 파일은 장고에서 정적(static)파일로 분류한다. 정적 파일은 주로 이미지(.png, .jpg)나 자바스크립트(.js), 스타일시트(.css) 같은 파일을 의미한다.
+### [1] 설정 파일에 스태틱 디렉터리 위치 추가하기
+config/settings.py 파일을 열어 STATICFILES_DIRS에 스태틱 디렉터리 경로를 추가하자. BASE_DIR / 'static'은 C:/projects/mysite/static을 의미한다.
+```python
+(... 생략 ...)
+STATIC_URL = '/static/'
+# ---------------------------------- [edit] ---------------------------------- #
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',
+]
+# ---------------------------------------------------------------------------- #
+```
+### [2] 스태틱 디렉터리 만들고 스타일시트 작성하기
+프로젝트 루트 디렉터리에 static이라는 이름의 디렉터리를 생성하자. 루트 디렉터리는 C:/ projects/mysite를 의미한다.
+
+```python
+(mysite) C:/projects/mysite>mkdir static
+```
+#### 스태틱 디렉터리를 관리하는 방법
+pybo 앱 디렉터리 바로 아래에 static이라는 디렉터리를 만들어도 장고에서 스태틱 디렉터리로 인식된다. 즉, 다음과 같이 static 디렉터리를 만들어도 된다.
+
+[static 디렉터리 구성]
+```python
+C:/projects/mysite/pybo/static
+```
+하지만 이 방법 역시 템플릿 디렉터리를 구성할 때 설명했듯 프로젝트 관리를 불편하게 만든다. 이 책에서는 스태틱 디렉터리도 템플릿 디렉터리처럼 한곳으로 모아서 관리할 것이다.
+
+static 디렉터리를 만들었으면 그곳에 style.css 파일을 만들어 다음 코드를 작성하자. 여기서는 답변을 등록할 때 사용하는 textarea를 100%로 넓히고, <답변등록> 버튼 위에 margin을 10px 추가했다.
+
+```python
+/* ---------------------------------- [edit] --------------------------------- */
+textarea {
+    width:100%;
+}
+
+input[type=submit] {
+    margin-top:10px;
+}
+/* --------------------------------------------------------------------------- */
+```
+
+- CSS를 활용하면 이보다 더 예쁘게 만들 수 있다. 그것은 필자보다 디자인 감각이 뛰어난 독자 여러분 몫으로 남겨 둔다. 그 대신 다음 절에서 부트스트랩을 이용해 좀 더 예쁘게 만드는 방법을 소개한다.
+
+### [3] 질문 상세 템플릿에 스타일 적용하기
+pybo/question_detail.html 파일에 style.css 파일을 적용해 보자. 스태틱 파일을 사용하기위해 템플릿 파일 맨 위에 {% load static %} 태그를 삽입하고, link 엘리먼트 href 속성에 {% static 'style.css' %}를 적자.
+
+```python
+<!-- ------------------------------- [edit] -------------------------------- -->
+{% load static %}
+<link rel="stylesheet" type="text/css" href="{% static 'style.css' %}">
+<!-- ----------------------------------------------------------------------- -->
+<h1>{{ question.subject }}</h1>
+(... 생략 ...)
+```
+추가한 코드는 static 디렉터리의 style.css 파일을 연결한다는 의미다. 질문 상세 화면은 다음과 같이 바뀔 것이다. 만약 아무런 변화가 없다면 개발 서버를 종료했다가 다시 실행해 보자.
+
+- 개발 서버를 종료하려면 <Ctrl+C>를 누르면 된다.
+
+![](img/2-07_1.png)
+
+축하한다. 이제 조금은 그럴싸한 화면을 출력할 수 있게 되었다.
+
+## 부트스트랩으로 더 쉽게 화면 꾸미기
+웹 디자이너 없이 웹 프로그램을 만들다 보면 화면 디자인 작업을 하는 데 얼마나 많은 시간과 고민이 필요한지 알 수 있을 것이다. 이번에 소개하는 부트스트랩(Bootstrap)은 개발자 혼자서도 화면을 괜찮은 수준으로 만들 수 있게 도와주는 도구다. 부트스트랩은 트위터를 개발하면서 만들어졌고 지속적으로 관리되고 있는 오픈소스 프로젝트이다.
+
+## 파이보에 부트스트랩 적용하기
+파이보에 부트스트랩을 적용해 멋진 모습으로 변신시켜 보자.
+### [1] 부트스트랩 설치하기
+웹 브라우저를 열고 다음 URL에 접속한 다음 <Download>를 눌러 부트스트랩 설치 파일을 내려받자.
+
+- 부트스트랩 4.5.3 버전 다운로드: getbootstrap.com/docs/4.5/getting-started/download
+- 이 책에 실린 코드는 부트스트랩 버전5에서 정상 동작하지 않는다. 혹시 실습한 내용이 동일하게 보이지 않으면 부트스트랩 버전이 5가 아닌지 확인해 보자. 이 책은 부트스트랩 4.5.3 버전(버전 4의 마지막 버전)을 기준으로 실습을 진행한다.
+- 부트스트랩은 2020년 12월 7일 기준으로 버전 5.0(베타)가 출시되었다.
+
+![](/img/2-08_1.png)
+
+그러면 bootstrap-4.5.3-dist.zip 파일이 다운로드된다. 내려받은 파일의 압축을 해제하면 많은 파일이 들어 있다. 이 중에서 bootstrap.min.css 파일만 복사해서 mysite/static 디렉터리에 저장하자.
+
+- 압축파일내 경로 : bootstrap-4.5.3-dist.zip\bootstrap-4.5.3-dist\css\bootstrap.min.css
+- 카피한 경로 : C:\projects\mysite\static\bootstrap.min.css
+
+### [2] 질문 목록 템플릿에 부트스트랩 적용하기
+pybo/question_list.html 파일에 부트스트랩을 적용하기 위해 {% load static %} 태그와 link 엘리먼트를 추가하자.
+
+```python
+<!-- ------------------------------- [edit] -------------------------------- -->
+{% load static %}
+<link rel="stylesheet" type="text/css" href="{% static 'bootstrap.min.css' %}">
+<!-- ----------------------------------------------------------------------- -->
+{% if question_list %}
+(... 생략 ...)
+```
+이어서 부트스트랩을 이용하여 템플릿을 다음과 같이 재구성하자. 여기서 사용된 container, my-3, thead-dark 등이 바로 부트스트랩이 제공하는 클래스이다.
+
+```python
+<!-- ------------------------------- [edit] -------------------------------- -->
+{% load static %}
+<link rel="stylesheet" type="text/css" href="{% static 'bootstrap.min.css' %}">
+<div class="container my-3">
+    <table class="table">
+        <thead>
+        <tr class="thead-dark">
+            <th>번호</th>
+            <th>제목</th>
+            <th>작성일시</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% if question_list %}
+        {% for question in question_list %}
+        <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>
+                <a href="{% url 'pybo:detail' question.id %}">{{ question.subject }}</a>
+            </td>
+            <td>{{ question.create_date }}</td>
+        </tr>
+        {% endfor %}
+        {% else %}
+        <tr>
+            <td colspan="3">질문이 없습니다.</td>
+        </tr>
+        {% endif %}
+        </tbody>
+    </table>
+</div>
+<!-- ----------------------------------------------------------------------- -->
+```
+기존에는 질문 목록을 ul 엘리먼트로 간단히 표시했지만, 여기서는 table 엘리먼트로 바꾸고 질문의 일련번호와 작성일시 항목도 추가했다. 질문의 일련번호는 {{ forloop.counter }}를 이용하여 표시했다. {{ forloop.counter }}는 {% for ... %}에서 반복 시 자동으로 매겨지는 순섯값을 의미한다.
+
+웹 브라우저에서 /pybo에 접속하면 부트스트랩이 적용된 화면을 볼 수 있다.
+
+![](/img/2-08_2.png)
+
+- 앞으로 다른 화면을 만들 때도 부트스트랩을 사용할 것이다. 그러나 이 책의 주제는 부트스트랩이 아니므로 간단히 설명한다. 혹시 자세한 내용이 궁금하다면 부트스트랩 공식 문서를 읽어 보기를 권한다.
+- 부트스트랩 공식 문서: getbootstrap.com/docs/4.5/getting-started/introduction
+
+### [3] 질문 상세 템플릿에 부트스트랩 사용하기
+질문 상세 템플릿도 다음과 같이 부트스트랩을 적용하자.
+
+```python
+<!-- ------------------------------- [edit] -------------------------------- -->
+{% load static %}
+<link rel="stylesheet" type="text/css" href="{% static 'bootstrap.min.css' %}">
+<div class="container my-3">
+    <h2 class="border-bottom py-2">{{ question.subject }}</h2>
+    <div class="card my-3">
+        <div class="card-body">
+            <div class="card-text" style="white-space: pre-line;">{{ question.content }}</div>
+            <div class="d-flex justify-content-end">
+                <div class="badge badge-light p-2">
+                    {{ question.create_date }}
+                </div>
+            </div>
+        </div>
+    </div>
+    <h5 class="border-bottom my-3 py-2">{{question.answer_set.count}}개의 답변이 있습니다.</h5>
+    {% for answer in question.answer_set.all %}
+    <div class="card my-3">
+        <div class="card-body">
+            <div class="card-text" style="white-space: pre-line;">{{ answer.content }}</div>
+            <div class="d-flex justify-content-end">
+                <div class="badge badge-light p-2">
+                    {{ answer.create_date }}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    <form action="{% url 'pybo:answer_create' question.id %}" method="post" class="my-3">
+        {% csrf_token %}
+        <div class="form-group">
+            <textarea name="content" id="content" class="form-control" rows="10"></textarea>
+        </div>
+        <input type="submit" value="답변등록" class="btn btn-primary">
+    </form>
+</div>
+<!-- ----------------------------------------------------------------------- -->
+```
+질문, 답변은 하나의 뭉치에 해당되므로 부트스트랩의 card 컴포넌트를 사용했고, 질문 내용과 답변 내용은 style 속성으로 white-space: pre-line을 적용하여 텍스트의 줄바꿈을 정상적으로 보이게 만들었다. 부트스트랩 클래스 my-3은 상하 마진값 3을 의미한다. py-2는 상하 패딩값 2, p-2는 상하좌우 패딩값 2를 의미한다. d-flex justify-content-end는 컴포넌트 오른쪽 정렬을 의미한다.
+
+- 부트스트랩 공식 문서(card 컴포넌트) : getbootstrap.com/docs/4.5/components/car
+
+### [4] 질문 상세 화면 확인하기
+질문 상세 화면이 어떻게 바뀌었는지 확인해 보자.
+
+![](/img/2-08_3.png)
+
+부트스트랩을 사용하면 정말 빠르게 만족스러운 화면을 만들 수 있다.
+
+## 표준 HTML과 템플릿 상속 사용해 보기
+혹시 눈치챘는지 모르겠지만, 지금까지 작성한 질문 목록과 질문 상세 템플릿 파일은 표준 HTML 구조가 아니다. 어떤 운영체제나 웹 브라우저를 사용하더라도 웹 페이지가 동일하게 보이고 정상적으로 작동 하게 하려면 반드시 웹 표준을 지키는 HTML 문서를 작성해야 한다.
+
+## 표준 HTML 구조는 어떻게 생겼을까?
+표준 HTML 문서의 구조는 다음과 같이 html, head, body 엘리먼트가 있어야 하며, CSS 파일은 head 엘리먼트 안에 있어야 한다. 또한 head 엘리먼트 안에는 meta, title 엘리먼트 등이 포함되어야 한다.
+
+[표준 HTML 구조 예]
+
+```python
+{% load static %}
+<!doctype html>
+<html lang="ko">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" type="text/css" href="{% static 'bootstrap.min.css' %}">
+    <!-- pybo CSS -->
+    <link rel="stylesheet" type="text/css" href="{% static 'style.css' %}">
+    <title>Hello, pybo!</title>
+</head>
+<body>
+
+(... 생략 ...)
+
+</body>
+</html>
+```
+
+## 템플릿을 표준 HTML 구조로 바꾸기
+앞에서 작성한 템플릿 파일을 표준 HTML 구조로 수정해 보자. 그런데 모든 템플릿 파일을 표준 HTML 구조로 변경하면 body 엘리먼트 바깥 부분은 모두 같은 내용으로 중복된다. 그리고 CSS 파일 이름이 변경되거나 새로운 CSS 파일이 추가되면 head 엘리먼트의 내용을 수정하려고 템플릿 파일을 일일이 찾아다녀야 하는 불편함도 있다.
+
+장고는 이런 불편함을 해소하기 위한 템플릿 상속(extends) 기능을 제공한다. 여기서는 단순히 템플릿을 표준 HTML 구조로 바꾸는 것이 아니라 템플릿 상속 기능까지 사용할 것이다. 그러면 파일을 하나씩 수정해 보자.
+
+### [1] 템플릿 파일의 기본 틀 작성하기
+우선 템플릿 파일의 기본 틀인 base.html 템플릿을 작성하자. 모든 템플릿에서 공통으로 입력할 내용을 여기에 포함한다고 생각하면 된다.
+
+```python
+<!-- ------------------------------- [edit] -------------------------------- -->
+{% load static %}
+<!doctype html>
+<html lang="ko">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" type="text/css" href="{% static 'bootstrap.min.css' %}">
+    <!-- pybo CSS -->
+    <link rel="stylesheet" type="text/css" href="{% static 'style.css' %}">
+    <title>Hello, pybo!</title>
+</head>
+<body>
+<!-- 기본 템플릿 안에 삽입될 내용 Start -->
+{% block content %}
+{% endblock %}
+<!-- 기본 템플릿 안에 삽입될 내용 End -->
+</body>
+</html>
+<!-- ----------------------------------------------------------------------- -->
+```
+body 엘리먼트에 {% block content %}와 {% endblock %} 템플릿 태그가 있다. 바로 이 부분이 이후 base.html 템플릿 파일을 상속한 파일에서 구현해야 하는 영역이 된다. 이제 question_list.html 템플릿을 다음과 같이 변경하자.
+
+### [2] 질문 목록 템플릿 수정하기
+질문 목록을 나타내는 question_list.html 파일을 다음과 같이 수정하자.
+
+```python
+<!-- ------------------------------- [edit] -------------------------------- -->
+{% extends 'base.html' %}
+{% block content %}
+<!-- ----------------------------------------------------------------------- -->
+<div class="container my-3">
+    <table class="table">
+        (... 생략 ...)
+    </table>
+</div>
+<!-- ------------------------------- [edit] -------------------------------- -->
+{% endblock %}
+<!-- ----------------------------------------------------------------------- -->
+```
+base.html 템플릿 파일을 상속받고자 {% extends 'base.html' %} 템플릿 태그를 사용했다. 그리고 {% block content %}와 {% endblock %} 사이에 question_list.html 파일에서만 사용할 내용을 작성했다. 이제 question_list.html은 base.html을 상속받았으므로 표준 HTML 구조를 갖추게 되었다.
+
+### [3] 질문 상세 템플릿 수정하기
+
+```python
+<!-- ------------------------------- [edit] -------------------------------- -->
+{% extends 'base.html' %}
+{% block content %}
+<!-- ----------------------------------------------------------------------- -->
+<div class="container my-3">
+    <h2 class="border-bottom py-2">{{ question.subject }}</h2>
+    (... 생략 ...)
+    </form>
+</div>
+<!-- ------------------------------- [edit] -------------------------------- -->
+{% endblock %}
+<!-- ----------------------------------------------------------------------- --
+```
+### [4] 기존 스타일 파일 내용 비우기
+부트스트랩을 사용하게 되었으니 style.css 파일의 내용을 비우자. 이 파일은 이후 부트스트랩으로 표현할 수 없는 스타일을 위해 사용할 것이므로 파일 자체를 삭제하지는 말고 내용만 삭제하자.
+
+```python
+/* ---------------------------------- [edit] --------------------------------- */
+/* 내용을 전부 삭제하자. */
+/* --------------------------------------------------------------------------- */
+```
+## 질문 등록 기능 만들기
+지금까지는 질문을 등록하기 위해 장고 셸이나 장고 Admin을 사용했다. 이번에는 파이보 서비스를 통해 질문을 등록하는 기능을 만들어 보자.
+
+질문 목록 화면 아래에 질문 등록 버튼을 만든 다음, 질문 등록 기능을 완성해 보자. 참고로 질문 등록 기능은 이 장 끝까지 진행해야 완벽하게 작동한다.
+
+### [1] 질문 등록 버튼 만들기
+우선 다음처럼 질문 목록 템플릿을 열고 </table> 태그 아래에 질문 등록 버튼을 생성하자.
+
+```python
+    (... 생략 ...)
+    </table>
+<!-- ------------------------------- [edit] -------------------------------- -->
+    <a href="{% url 'pybo:question_create' %}" class="btn btn-primary">질문 등록하기</a>
+<!-- ----------------------------------------------------------------------- -->    
+</div>
+{% endblock %}
+```
+a 엘리먼트에 href 속성으로 질문 등록 URL을 {% url 'pybo:question_create' %}처럼 추가하고 부트스트랩 클래스 "btn btn-primary"를 지정했다.
+
+### [2] URL 매핑 추가를 위해 pybo/urls.py 수정하기
+위에서 {% url 'pybo:question_create' %}이 추가되었으니 pybo/urls.py 파일에 URL 매핑을 추가하자.
+
+```python
+(... 생략 ...)
+urlpatterns = [
+    (... 생략 ...)
+# ---------------------------------- [edit] ---------------------------------- #
+    path('question/create/', views.question_create, name='question_create'),
+# ---------------------------------------------------------------------------- #
+]
+```
+
+### [3] pybo/views.py 수정하기
+그리고 URL 매핑에 의해 실행될 views.question_create 함수를 작성하자
+
+```python
+# ---------------------------------- [edit] ---------------------------------- #
+from .forms import QuestionForm
+# ---------------------------------------------------------------------------- #
+
+(... 생략 ...)
+
+# ---------------------------------- [edit] ---------------------------------- #
+def question_create(request):
+    """
+    pybo 질문등록
+    """
+    form = QuestionForm()
+    return render(request, 'pybo/question_form.html', {'form': form})
+# ---------------------------------------------------------------------------- #
+```
+question_create 함수는 QuestionForm 클래스로 생성한 객체 form을 사용할 것이다. 여기서 QuestionForm 클래스는 질문을 등록하기 위해 사용하는 장고의 폼이다. render 함수에 전달한 {'form': form}은 템플릿에서 폼 엘리먼트를 생성할 때 사용한다. 템플릿을 작성할 때 자세히 알아보겠다.
+
+- QuestionForm을 아직 작성하지 않아 파이참에서는 오류가 표시될 것이다. QuestionForm은 곧 만들 것이니 일단은 오류가 나오는 상태로 놔두자.
+
+### [4] pybo/forms.py에 장고 폼 작성하기
+pybo 디렉터리 바로 아래에 forms.py 파일을 새로 만들어 ModelForm을 상속받은 QuestionForm 클래스를 작성하자. QuestionForm 클래스 안에 내부 클래스로 Meta 클래스를 작성하고, Meta 클래스 안에는 model, fields 속성을 다음과 같이 작성하자
+
+```python
+# ---------------------------------- [edit] ---------------------------------- #
+from django import forms
+from pybo.models import Question
+
+
+class QuestionForm(forms.ModelForm):
+    class Meta:
+        model = Question
+        fields = ['subject', 'content']
+# ---------------------------------------------------------------------------- #
+```
+이 같은 클래스를 장고 폼이라 한다. 장고 폼은 사실 2개의 폼으로 구분할 수 있는데, forms.Form을 상속받으면 폼, forms.ModelForm을 상속받으면 모델 폼이라 부른다. 여기서는 form.ModelForm을 상속받아 모델 폼을 만들었다. 모델 폼은 말 그대로 모델과 연결된 폼이며, 모델 폼 객체를 저장하면 연결된 모델의 데이터를 저장할 수 있다. 아직 모델 폼 객체를 저장한다는 의미가 잘 이해되지는 않겠지만, 곧 질문 등록 기능을 완성하며 이 내용을 자세히 설명하겠다. 내부 클래스로 선언한 Meta 클래스가 눈에 띌 것이다. 장고 모델 폼은 내부 클래스로 Meta 클래스를 반드시 가져야 하며, Meta 클래스에는 모델 폼이 사용할 모델과 모델의 필드들을 적어야 한다. QuestionForm 클래스는 Question 모델과 연결되어 있으며, 필드로 subject, content를 사용한다고 정의했다.
+
+### [5] pybo/question_form.html 만들어 장고 폼 사용
+질문 등록을 위해 pybo/question_form.html 파일을 생성하고 다음과 같이 작성하자.
+
+```python
+<!-- ------------------------------- [edit] -------------------------------- -->
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h5 class="my-3 border-bottom pb-2">질문등록</h5>
+    <form method="post" class="post-form my-3">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">저장하기</button>
+    </form>
+</div>
+{% endblock %}
+<!-- ----------------------------------------------------------------------- -->
+```
+코드의 {{ form.as_p }}에서 form이 바로 question_create 함수에서 전달한 QuestionForm 객체이다. 여기서 {{ form.as_p }}는 모델 폼과 연결된 입력 항목 subject, content에 값을 입력할 수 있는 HTML 코드를 자동으로 만들어 준다.
+
+### [6] 질문 등록 화면 확인하기
+이제 웹 브라우저에서 지금까지 작업한 내용의 결과를 확인해 보자. /pybo/ 페이지를 요청해 보자. 그러면 <질문 등록하기> 버튼이 표시될 것이다. <질문 등록하기> 버튼을 누르자.
+
+![](img/2-10_1.png)
+
+그러면 다음과 같은 질문 등록 화면이 나타나고 질문 등록 화면에는 템플릿에 작성한 {{ form.as_p }}에 의해 나타난 입력 항목 subject, content를 확인할 수 있다. 값을 입력하고 <저장하기> 버튼을 눌러 보자.
+
+![](img/2-10_2.png)
+
+그런데 아무런 반응이 없다. 왜냐하면 pybo/views.py 파일에 정의한 question_create 함수에 입력 데이터를 저장하기 위한 코드를 작성하지 않았기 때문이다. 이제 입력 데이터를 저장하는 방법에 대해 알아보자.
+
+### [7] 입력 데이터 저장하기
+pybo/views.py 파일의 question_create 함수를 수정하자. 코드가 꽤 기니 주의해서 입력하자.
+
+```python
+def question_create(request):
+    """
+    pybo 질문등록
+    """
+# ---------------------------------- [edit] ---------------------------------- #
+    if request.method == 'POST':
+        form = QuestionForm(request.POST)
+        if form.is_valid():
+            question = form.save(commit=False)
+            question.create_date = timezone.now()
+            question.save()
+            return redirect('pybo:index')
+    else:
+        form = QuestionForm()
+    context = {'form': form}
+    return render(request, 'pybo/question_form.html', context)
+# ---------------------------------------------------------------------------- #
+```
+가장 눈에 띄는 부분은 동일한 URL 요청을 POST, GET 요청 방식에 따라 다르게 처리한 부분이다. 질문 목록 화면에서 <질문 등록하기> 버튼을 누르면 /pybo/question/create/가 GET 방식으로 요청되어 질문 등록 화면이 나타나고, 질문 등록 화면에서 입력값을 채우고 <저장하기> 버튼을 누르면 /pybo/question/create/가 POST 방식으로 요청되어 데이터가 저장된다.
+
+그리고 QuestionForm 객체도 GET 방식과 POST 방식일 경우 다르게 생성한 것에 주목하자. GET 방식의 경우 QuestionForm()과 같이 입력값 없이 객체를 생성했고 POST 방식의 경우에는 QuestionForm(request.POST)처럼 화면에서 전달받은 데이터로 폼의 값이 채워지도록 객체를 생성했다. form.is_valid 함수는 POST 요청으로 받은 form이 유효한지 검사한다. 폼이 유효하지 않다면 폼에 오류가 저장되어 화면에 전달될 것이다.
+
+그리고 question = form.save(commit=False)는 form으로 Question 모델 데이터를 저장하기 위한 코드이다. 여기서 commit=False는 임시 저장을 의미한다. 즉, 실제 데이터는 아직 저장되지 않은 상태를 말한다. 이렇게 임시 저장을 사용하는 이유는 폼으로 질문 데이터를 저장할 경우 Question 모델의 create_date에 값이 설정되지 않아 오류가 발생하기 때문이다(폼에는 현재 subject, content 필드만 있고 create_date 필드는 없다). 이러한 이유로 임시 저장을 한 후 question 객체를 반환받아 create_date에 값을 설정한 후 question.save()로 실제 저장하는 것이다.
+
+- form.save(commit=False) 대신 form.save()를 수행하면 create_date 속성값이 없다는 오류 메시지가 나타난다.
+
+### [8] 질문 등록 기능 확인하기
+웹 브라우저에서 질문 등록 기능을 확인해 보자. /pybo에 접속하여 <질문 등록하기> 버튼을 눌러 질문 등록 화면으로 이동하자.
+
+![](img/2-10_3.png)
+
+웹 브라우저에서 질문 등록 기능을 확인해 보자. /pybo에 접속하여 <질문 등록하기> 버튼을 눌러 질문 등록 화면으로 이동하자.
+
+![](img/2-10_4.png)
+
+[값 입력 후 <저장하기> 버튼 누르기]
+
+![](img/2-10_5.png)
+
+[질문 등록 완료]
+
+### [9] 폼에 부트스트랩 적용하기
+여기까지 진행하면 질문 등록 화면에 부트스트랩이 적용되지 않아서 아쉬움이 느껴질 것이다. 그렇다. {{ form.as_p }} 태그는 form 엘리먼트와 입력 항목을 자동으로 생성해 주므로 편리하기는 하지만 부트스트랩을 적용할 수 없다는 단점이 있다. 이 문제를 해결할 수는 없을까? 완벽하지는 않지만, QuestionForm 클래스 내부에 있는 Meta 클래스에 widgets 속성을 다음과 같이 추가하면 이 문제를 해결할 수 있다.
+
+```python
+from django import forms
+from pybo.models import Question
+
+
+class QuestionForm(forms.ModelForm):
+    class Meta:
+        model = Question
+        fields = ['subject', 'content']
+# ---------------------------------- [edit] ---------------------------------- #
+        widgets = {
+            'subject': forms.TextInput(attrs={'class': 'form-control'}),
+            'content': forms.Textarea(attrs={'class': 'form-control', 'rows': 10}),
+        }
+# ---------------------------------------------------------------------------- #
+```
+다시 질문 등록 화면을 요청해 보면 다음과 같이 부트스트랩이 적용된 화면을 볼 수 있다.
+
+![](img/2-10_6.png)
+
+### [10] label 속성 수정하여 Subject, Content 한글로 변경하기
+화면의 'Subject', 'Content'를 영문이 아니라 한글로 표시하고 싶다면 label 속성을 지정하면 된다.
+
+```python
+from django import forms
+from pybo.models import Question
+
+
+class QuestionForm(forms.ModelForm):
+    class Meta:
+        model = Question
+        fields = ['subject', 'content']
+        widgets = {
+            'subject': forms.TextInput(attrs={'class': 'form-control'}),
+            'content': forms.Textarea(attrs={'class': 'form-control', 'rows': 10}),
+        }
+# ---------------------------------- [edit] ---------------------------------- #
+        labels = {
+            'subject': '제목',
+            'content': '내용',
+        }
+# ---------------------------------------------------------------------------- #
+```
+그러면 'Subject'는 '제목'으로 'Content'는 '내용'으로 변경된다.
+
+![](img/2-10_7.png)
+
+- 장고 폼에 대한 자세한 내용은 장고 공식 문서를 참고하자.
+- 장고 공식 문서(폼): docs.djangoproject.com/en/3.0/topics/forms
+
+### [11] 수작업으로 폼 작성하기
+{{ form.as_p }}를 사용하면 빠르게 템플릿을 만들 수 있지만 HTML 코드가 자동으로 생성되므로 디자인 측면에서 많은 제한이 생기게 된다. 예를 들어 특정 태그를 추가하거나 필요한 클래스를 추가하는 작업에 제한이 생긴다. 또 디자인 영역과 서버 프로그램 영역이 혼재되어 웹 디자이너와 개발자의 역할을 분리하기도 애매해진다. 이번에는 자동으로 HTML 코드를 생성하지 말고 수작업으로 HTML 코드를 작성해 보자. 우선 forms.py 파일의 widget 항목을 제거하자.
+
+```python
+from django import forms
+from pybo.models import Question
+
+
+class QuestionForm(forms.ModelForm):
+    class Meta:
+        model = Question
+        fields = ['subject', 'content']
+        labels = {
+            'subject': '제목',
+            'content': '내용',
+        }
+# ---------------------------------- [edit] ---------------------------------- #
+        # widget 항목 삭제
+# ---------------------------------------------------------------------------- #
+```
+그런 다음 질문 등록 템플릿을 다음과 같이 수정하자.
+
+```python
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h5 class="my-3 border-bottom pb-2">질문등록</h5>
+    <form method="post" class="post-form my-3">
+        {% csrf_token %}
+<!-- ------------------------------- [edit] -------------------------------- -->
+        <!-- 오류표시 Start -->
+        {% if form.errors %}
+            <div class="alert alert-danger" role="alert">
+            {% for field in form %}
+                {% if field.errors %}
+                <strong>{{ field.label }}</strong>
+                {{ field.errors }}
+                {% endif %}
+            {% endfor %}
+            </div>
+        {% endif %}
+        <!-- 오류표시 End -->
+        <div class="form-group">
+            <label for="subject">제목</label>
+            <input type="text" class="form-control" name="subject" id="subject"
+                   value="{{ form.subject.value|default_if_none:'' }}">
+        </div>
+        <div class="form-group">
+            <label for="content">내용</label>
+            <textarea class="form-control" name="content"
+                      id="content" rows="10">{{ form.content.value|default_if_none:'' }}</textarea>
+        </div>
+<!-- ----------------------------------------------------------------------- -->
+        <button type="submit" class="btn btn-primary">저장하기</button>
+    </form>
+</div>
+{% endblock %}
+```
+{{ form.as_p }}에 의해 자동 생성되는 HTML 대신 제목과 내용을 위한 HTML을 직접 작성했다. 그리고 question_create 함수에서 form.is_valid()가 실패했을 때 오류를 표시하기 위해 오류 표시 영역도 추가했다. 제목의 value에는 {{ form.subject.value|default_if_none:'' }}을 대입했는데, 이는 오류 발생 시 기존 입력값을 유지하기 위함이다. |default_if_none:''는 form.subject.value에 값이 없으면 'None'이라는 문자열이 표시되는데, 이를 공백으로 표시하기 위해 사용한 템플릿 필터이다. 수정 후 질문 등록 화면으로 돌아가 제목만 입력하고 <저장하기> 버튼을 누르면 다음 화면을 볼 수 있다.
+
+![](img/2-10_8.png)
+
+필수 항목인 내용을 입력하지 않았으니 '내용을 입력하라'는 오류 메시지를 볼 수 있다. 또한 오류가 발생해도 이미 입력한 제목에 해당되는 값은 value 설정으로 인해 그대로 유지되는 것도 확인할 수 있다.
+
+## 답변 등록 기능에 장고 폼 적용하기
+### [1] AnswerForm 클래스 추가하고 answer_create 함수 수정하기
+질문 등록 기능에 장고 폼을 적용한 것처럼 답변 등록 기능에도 장고 폼을 적용하자. 답변을 등록할 때 사용할 AnswerForm 클래스를 pybo/forms.py 파일에 다음과 같이 작성하자.
+
+```python
+from django import forms
+# ---------------------------------- [edit] ---------------------------------- #
+from pybo.models import Question, Answer
+# ---------------------------------------------------------------------------- #
+
+(... 생략 ...)
+
+# ---------------------------------- [edit] ---------------------------------- #
+class AnswerForm(forms.ModelForm):
+    class Meta:
+        model = Answer
+        fields = ['content']
+        labels = {
+            'content': '답변내용',
+        }
+# ---------------------------------------------------------------------------- #
+```
+그런 다음 pybo/views.py 파일의 answer_create 함수를 수정하자. answer_create 함수는 question_create 함수와 거의 동일하므로 자세한 설명은 생략한다.
+
+```python
+(... 생략 ...)
+# ---------------------------------- [edit] ---------------------------------- #
+from .forms import QuestionForm, AnswerForm
+# ---------------------------------------------------------------------------- #
+(... 생략 ...)
+
+def answer_create(request, question_id):
+    """
+    pybo 답변등록
+    """
+    question = get_object_or_404(Question, pk=question_id)
+# ---------------------------------- [edit] ---------------------------------- #
+    if request.method == "POST":
+        form = AnswerForm(request.POST)
+        if form.is_valid():
+            answer = form.save(commit=False)
+            answer.create_date = timezone.now()
+            answer.question = question
+            answer.save()
+            return redirect('pybo:detail', question_id=question.id)
+    else:
+        form = AnswerForm()
+    context = {'question': question, 'form': form}
+    return render(request, 'pybo/question_detail.html', context)
+# ---------------------------------------------------------------------------- #
+```
+### [2] 질문 상세 템플릿에 오류 표시 영역 추가하기
+질문 상세 템플릿에 오류 표시 영역을 추가하자.
+
+```python
+(... 생략 ...)
+<form action="{% url 'pybo:answer_create' question.id %}" method="post" class="my-3">
+    {% csrf_token %}
+<!-- ------------------------------- [edit] -------------------------------- -->
+    {% if form.errors %}
+    <div class="alert alert-danger" role="alert">
+    {% for field in form %}
+        {% if field.errors %}
+        <strong>{{ field.label }}</strong>
+        {{ field.errors }}
+        {% endif %}
+    {% endfor %}
+    </div>
+    {% endif %}
+<!-- ----------------------------------------------------------------------- -->
+    (... 생략 ...)
+</form>
+(... 생략 ...)
+```
+이렇게 수정하고 답변 내용 없이 답변을 등록하려고 하면 오류 메시지가 그림처럼 나타난다.
+
+![](img/2-10_9.png)
