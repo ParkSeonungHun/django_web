@@ -1037,7 +1037,7 @@ docs.djangoproject.com/en/3.0/ref/contrib/admin
 ## 질문 목록 기능 구현하기
 질문 목록 조회를 위해 pybo/views.py 파일을 열어 코드를 조금씩 수정해보자.
 
-[1] Question 모델 데이터 작성일시 역순으로 조회하기
+### [1] Question 모델 데이터 작성일시 역순으로 조회하기
 
 Question 모델을 임포트해 Question 모델 데이터를 작성한 날짜의 역순으로 조회하기 위해 order_by 함수를 사용했다. 조회한 Question 모델 데이터는 context 변수에 저장했다. context 변수는 조금 후에 설명할 render 함수가 템플릿을 HTML로 변환하는 과정에서 사용되는 데이터이다.
 
@@ -1060,7 +1060,7 @@ def index(request):
 ```
 order_by 함수는 조회한 데이터를 특정 속성으로 정렬하며, '-create_date'는 - 기호가 앞에 붙어 있으므로 작성일시의 역순을 의미한다.
 
-[2] render로 화면 출력하기
+### [2] render로 화면 출력하기
 
 조회한 Question 모델 데이터를 템플릿 파일을 사용하여 화면에 출력할 수 있는 render 함수를 사용해 보자.
 
@@ -1081,7 +1081,7 @@ def index(request):
     return render(request, 'pybo/question_list.html', context)
 # ---------------------------------------------------------------------------- #
 ```
-[3] 템플릿을 모아 저장할 디렉터리 만들기
+### [3] 템플릿을 모아 저장할 디렉터리 만들기
 
 템플릿을 만들기 전에 템플릿을 저장할 디렉터리를 루트 디렉터리 바로 밑에 만든다.
 
@@ -1090,7 +1090,7 @@ def index(request):
 (mysite) c:\projects\mysite>mkdir templates
 ```
 
-[4] 템플릿 디렉터리 위치 config/settings.py에 등록하기
+### [4] 템플릿 디렉터리 위치 config/settings.py에 등록하기
 
 위에서 만든 템플릿 디렉터리르 장고 config/setting.py 파일에 등록하자. config/settings.py 파일을 열어 TEMPLATES 항목을 다음과 같이 수정한다.
 
@@ -1108,3 +1108,94 @@ TEMPLATES = [
 (... 생략 ...)
 ```
 DIRS에는 템플릿 디렉터리를 여러 개 등록할 수 있다. 다만 현재 우리가 개발하는 파이보는 1개의 템플릿 디렉터리를 쓸 것이므로 BASE_DIR / 'templates'만 더 붙여 C:/projects/mysite/templates를 반환한다.
+
+### [5] 템플릿 파일 만들기
+위에서 만든 템플릿 디렉터리를 참고하여 qusetion_list.html 템플릿 파일을 mysite/templates/pybo/ 디렉터리에 생성하자. pybo 디렉터리를 templates 안에 새로 만들어 파일을 추가해야 한다.
+
+![](img/2-04_1)
+
+[templates/pybo/ 위치에 저장된 question list.html 파일]
+
+그리고 템플릿 파일을 다음과 같이 작성한다.
+
+```python
+<!-- ------------------------------- [edit] -------------------------------- -->
+{% if question in question_list %}
+    <ul>
+    {% for question in question_list %}
+        <li><a href="/pybo/{{ question.id }}/">{{ question.subject }}</a></li>
+    {% endfor %}
+    </ul>
+{% else %}
+   <p>질문이 없습니다.</p>
+{% endif %}
+<!-- ----------------------------------------------------------------------- -->
+```
+{% if question_list %} 라는 문장이 눈에 띌 것이다. 바로 이것이 템플릿 태그이다. 템플릿 태그는 {% 와 %}로 둘러싸인 문장을 말한다.
+
+다음 표에 정리한 템플릿 태그의 의미를 살펴보면 파이썬 문법과 크게 다르지 않음을 알 수 있다. 템플릿 태그는 따로 문법을 설명하지 않고 그때그때 필요할 때마다 설명하겠다.
+
+- 템플릿 태그에서 사용된 question_list가 바로 render 함수에서 템플릿으로 전달한 Question 모델 데이터이다.
+- 만약 템플릿 태그의 자세한 내용이 궁금하다면 장고 공식 문서를 참고하자.
+- 템플릿 장고 공식 문서 주소:docs.djangoproject.com/en/3.0/topics/templates
+
+
+- 템플릿 태그! 3가지 유형만 정리하면 끝!
+
+장고의 템플릿 태그는 분기, 반복, 객체 출력이라는 3가지 유형만 알면 된다. 분기 템플릿 태그는 다음과 같다. 문법을 보면 알겠지만 파이썬의 if 문과 다르지 않다. 다만 if 문이 끝나는 부분에 {% endif %}를 사용하는 점만 다르다.
+
+```python
+{% if 조건문1 %}
+    <p>조건문1에 해당되는 경우</p>
+{% elif 조건문2 %}
+    <p>조건문2에 해당되는 경우</p>
+{% else %}
+    <p>조건문1, 2에 모두 해당되지 않는 경우</p>
+{% endif %}
+```
+반복 템플릿 태그는 다음과 같다. 이 역시 파이썬의 for 문과 다르지 않으며, 역시 for 문의 마지막은 {% endfor %}로 닫아야 한다.
+
+```python
+{% for item in list %}
+    <p>순서: {{ forloop.counter }} </p>
+    <p>{{ item }}</p>
+{% endfor %}
+```
+또한 반복 템플릿 안에서는 forloop 객체를 사용할 수도 있다. forloop 객체는 반복 중 유용한 값을 제공한다.
+
+- forloop.counter : for 문의 순서로 1부터 표시
+- forloop.counter() : for  문의 순서로 0부터 표시
+- forloop.first : for 문의 첫 번째 순서인 경우 True
+- forloop.last : for 문의 마지막 순서인 경우 True
+
+객체 출력 템플릿 태그는 다음과 같다. 객체에 속성이 있으면 파이썬과 동일한 방법으로 점(.) 연산자를 사용한다.
+
+```python
+{{ question }}
+{{ question.id }}
+{{ question.subject }}
+```
+### [6] 질문 목록이 잘 출력되는지 확인해 보기
+
+템플릿 디렉터리를 추가한 상태이므로 장고 개발 서버를 다시 시작해 /pybo/에 접속하자. 장고 개발 서버를 다시 시작하지 않으면 장고가 템플릿 디렉터리를 인식하지 못해 오류가 발생한다.
+
+![](/img/2-04_2.png)
+
+[/pybo/에서 볼 수 있는 질문 목록]
+
+화면을 보면 이전에 등록한 질문 2건이 보인다. 직접 장고 쏄이나 장고 Admin에서 다른 질문도 추가해 보면서 질문 목록이 잘 만들어지는지 테스트 해본다.
+
+## 질문 상세 기능 구현하기
+
+### [1] 질문 목록에서 아무 질문이나 눌러보기
+질문 목록 화면에서 아무 질문(예를 들면 Django Model Question)이나 눌러 보자. 그러면 다음과 같은 오류 화면이 나타난다.
+
+![](/img/2-04_3.png)
+
+[질문 목록에서 질문을 눌러 이동한 화면(오류 화면)]
+
+오류 화면이 나타난 이유는 /pybo/2/에 대한 URL 매핑을 추가하지 않았기 때문이다.
+
+- 질문을 눌렀을 때 /pybo/2/와 같은 주소로 이동한 이유는 템플릿에서 href 엘리먼트에 link 속성을 <a href="/pybo/{{ question.id }}/">으로 지정했기 때문이다.
+
+### [2] pybo
