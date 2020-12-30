@@ -4425,3 +4425,263 @@ def comment_delete_answer(request, comment_id):
 - 답변 댓글에서 question_id를 얻어내기 위해 comment.answer.question과 같이 answer를 통해 question을 참조한 점도 확인하자.
 
 # 12월 26일 4장 세상에 선보이는 파이보 서비스!
+## 깃으로 버전 관리하기
+코드를 작성하다 보면 수정과 삭제를 많이 하게 된다. 가끔은 예전에 삭제한 코드를 되살려야 할 때도 있고, 수정한 코드를 다시 확인해야 할 때도 생긴다. 만약 프로젝트에 여러 사람이 참여했다면 파일 1개를 여럿이 수정해야 할 때도 있다. 그러면 누가 어떤 부분을 왜 수정했는지 알아야 한다. 이런 경우 '버전 관리 시스템'을 도입하면 간단히 해결할 수 있다. 이 장에서는 버전 관리 시스템 중에서도 가장 유명한 깃Git을 설치하고 사용해 본다.
+
+- 이후 Git은 깃으로 표기한다.
+
+## 깃 설치하기
+깃 공식 홈페이지에서 깃 설치 파일을 내려받아 설치하자. 설치 파일을 실행한 다음에는 계속 <Next>를 눌러 기본 옵션으로 설치하면 된다.
+
+- 공식 홈페이지: git-scm.com
+
+![](img/4-01_1.png)
+
+[깃 다운로드 화면]
+
+## 파이보에 깃 적용하기
+### [1] 파이보 프로젝트에서 저장소 만들기 - git init
+이제 파이보에 깃을 사용할 준비가 되었다. 가장 먼저 할 일은 저장소repository를 만드는 것이다. projects/mysite에서 git init 명령을 실행하자.
+
+```python
+(mysite) c:\projects\mysite>git init
+Initialized empty Git repository in C:/projects/mysite/.git/
+```
+그러면 C:/projects/mysite/.git/ 디렉터리가 생성된다. 이후 깃의 관리는 모두 이 디렉터리에서 이뤄진다.
+
+- 만약 .git 디렉터리가 보이지 않는다면 윈도우 탐색기의 [보기] 메뉴에서 '숨긴 항목' 옵션을 체크해서 선택해 보자.
+- git init 명령은 가상 환경을 실행하지 않아도 된다.
+### [2] 현재 저장소의 상태 확인하기 - git status
+그러면 projects/mysite에서 git status 명령을 실행해 보자.
+
+```python
+(mysite) c:\projects\mysite>git status
+On branch master
+
+No commits yet
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+        .idea/
+        common/
+        config/
+        db.sqlite3
+        manage.py
+        pybo/
+        static/
+        templates/
+
+nothing added to commit but untracked files present (use "git add" to track)
+```
+git status 명령은 현재 저장소의 상태를 출력한다. 또 아직 관리되지 않는 파일(untracked files)을 보여 주며, 이 파일을 관리하려면 git add 명령을 이용하라고 조언한다.
+### [3] 깃으로 관리하지 않을 파일 무시하기 - .gitignore
+앞에서 조언한 대로 git add 명령을 수행하기 전에 깃으로 관리할 파일을 고민해야 한다. 예를 들어 파이보를 만들며 직접 작성한 mysite, pybo 디렉터리 등은 깃으로 관리해야 할 대상이 맞지만 .idea나 db.sqlite3 파일은 사용자별, 시스템별로 달라지는 파일이므로 깃으로 관리하면 안 된다.
+
+- .idea는 사용자 설정을 저장하는 파이참 전용 파일이고, db.sqlite3 파일은 SQLite의 데이터베이스 파일이다.
+예를 들어 여러 명이 같은 저장소에서 작업할 때 .idea 파일을 누군가 변경한다면 내가 설정했던 파이참 설정 내용이 다른 사람의 것으로 변경되는 문제가 발생한다. 이런 문제를 방지하기 위해 .gitignore 파일을 작성하여 관리하지 않을 대상을 기술해 주어야 한다. 다음처럼 .gitignore 파일을 생성해 보자.
+  
+```python
+.idea
+db.sqlite3
+*.pyc
+__pycache__
+```
+컴파일된 파이썬 파일인 *.pyc와 __pycache__ 디렉터리도 깃으로 관리되지 않도록 .gitignore 파일에 추가해 주었다.
+### [4] 파일을 깃에 등록하기 - git add
+이제 다음처럼 add 명령을 수행해 보자.
+```python
+(mysite) c:\projects\mysite>git add --all .
+warning: LF will be replaced by CRLF in static/bootstrap.min.css.
+The file will have its original line endings in your working directory
+warning: LF will be replaced by CRLF in static/bootstrap.min.js.
+The file will have its original line endings in your working directory
+warning: LF will be replaced by CRLF in static/jquery-3.4.1.min.js.
+The file will have its original line endings in your working directory
+```
+현재 디렉터리 하위의 모든 파일을 추가하기 위해 git add *를 수행했다. bootstrap.min.css, bootstrap.min.js, jquery-3.4.1.min.js의 경고 문구는 '줄바꿈 문자를 \n에서 \r\n으로 강제로 바꾼다'는 의미이므로 무시해도 된다. 다시 git status 명령을 수행해 보자. 그러면 깃 스테이지 영역에 추가된 파일을 확인할 수 있다.
+```python
+(mysite) c:\projects\mysite>git status
+On branch master
+
+No commits yet
+
+Changes to be committed:
+  (use "git rm --cached <file>..." to unstage)
+        new file:   .gitignore
+        new file:   common/__init__.py
+        new file:   common/admin.py
+        (... 생략 ...)
+        new file:   templates/pybo/question_form.html
+        new file:   templates/pybo/question_list.html
+```
+#### 깃이 저장소에 변경 사항을 저장할 때는 스테이징을 거친다
+
+깃은 저장소에 변경 사항을 바로 저장하지 않고 스테이징(staging)이라는 단계를 거친다. 스테이징은 변경 사항을 저장소에 저장하기 직전 단계에 올려놓는 개념이다. 따라서 git add <파일명> 명령을 사용하면 git add 명령으로 지정한 파일이 스테이지 영역에 추가되고, 이후 git commit 명령을 수행해야 비로소 스테이지 영역에 있는 파일이 저장소에 저장된다.
+
+### [5] 커밋하고 이메일 주소와 사용자명 등록하기 - git commit, git config
+이제 git commit 명령을 수행하여 변경된 사항을 저장해 보자.
+```python
+(mysite) c:\projects\mysite>git commit -m "파이보 프로젝트 최초 커밋"
+
+*** Please tell me who you are.
+
+Run
+
+  git config --global user.email "you@example.com"
+  git config --global user.name "Your Name"
+
+to set your account's default identity.
+Omit --global to set the identity only in this repository.
+
+fatal: unable to auto-detect email address (got 'pahke@DESKTOP-8R43RU6.(none)')
+```
+git commit 명령을 수행하면 먼저 이메일 주소와 사용자명을 설정하라는 오류가 발생한다. 다음을 참조하여 이메일 주소와 사용자명을 본인의 것으로 설정해 보자.
+```python
+(mysite) c:\projects\mysite>git config --global user.email "pahkey@gmail.com"
+(mysite) c:\projects\mysite>git config --global user.name "박응용"
+```
+- 이메일 주소와 사용자명은 전역(global) 옵션으로 한 번만 설정하면 계속 유지된다.
+그리고 다시 git commit 명령을 수행해 보자.
+
+```python
+(mysite) c:\projects\mysite>git commit -m "파이보 프로젝트 최초 커밋"
+[master (root-commit) a092547] 파이보 프로젝트 최초 커밋
+ 50 files changed, 1389 insertions(+)
+ create mode 100644 .gitignore
+ create mode 100644 common/__init__.py
+ create mode 100644 common/admin.py
+ (... 생략 ...)
+ create mode 100644 templates/pybo/question_form.html
+ create mode 100644 templates/pybo/question_list.html
+```
+-m 옵션은 커밋의 내용을 입력하는 옵션이다. 이 옵션을 생략하면 커밋의 내용을 입력하는 에디터 창이 나타난다. 이제 다시 git status 명령을 수행해 보자.
+```python
+(mysite) c:\projects\mysite>git status
+On branch master
+nothing to commit, working tree clean
+```
+변경 사항이 없으며 작업 공간이 깨끗하다는 정보를 확인할 수 있다.
+### [6] templates/base.html 수정해 보기
+이번에는 base.html 템플릿 파일의 <title>을 다음과 같이 바꾸어 저장해 보자
+```python
+(... 생략 ...)
+<!-- ------------------------------- [edit] -------------------------------- -->
+<title>파이보</title>
+<!-- ----------------------------------------------------------------------- -->
+(... 생략 ...)
+```
+그리고 다시 git status 명령을 수행해 보자.
+```python
+(mysite) c:\projects\mysite>git status
+On branch master
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+        modified:   templates/base.html
+
+no changes added to commit (use "git add" and/or "git commit -a")
+```
+파일을 변경하고 git status 명령을 수행하면 이와 같은 변경 내역 정보가 표시된다.
+### [7] 코드의 변경 내역 확인하고 한글 문제 해결하기 - git diff
+코드의 변경 내역을 확인하려면 git diff 명령을 실행하면 된다.
+```python
+(mysite) c:\projects\mysite>git diff
+diff --git a/templates/base.html b/templates/base.html
+index af209b3..337feef 100644
+--- a/templates/base.html
++++ b/templates/base.html
+@@ -9,7 +9,7 @@
+     <link rel="stylesheet" type="text/css" href="{% static 'bootstrap.min.css' %}">
+     <!-- pybo CSS -->
+     <link rel="stylesheet" type="text/css" href="{% static 'style.css' %}">
+-    <title>Hello, pybo!</title>
++    <title><ED><8C><8C><EC><9D><B4><EB><B3><B4></title>
+ </head>
+ <body>
+ {% include "navbar.html" %}
+```
+그런데 git diff 명령을 수행하면 한글이 모두 깨져 보이는 문제가 발생한다. 이 문제를 해결하려면 다음처럼 set LC_ALL=C.UTF-8 명령을 수행하면 된다.
+- 만약 윈도우 파워셸에서 이를 실행하고 있었다면 $Env:LC_ALL = "C.UTF-8"을 입력해야 한다.
+```python
+(mysite) c:\projects\mysite>set LC_ALL=C.UTF-8
+```
+그리고 다시 git diff 명령을 실행해 보자.
+```python
+(mysite) c:\projects\mysite>git diff
+diff --git a/templates/base.html b/templates/base.html
+index af209b3..337feef 100644
+--- a/templates/base.html
++++ b/templates/base.html
+@@ -9,7 +9,7 @@
+     <link rel="stylesheet" type="text/css" href="{% static 'bootstrap.min.css' %}">
+     <!-- pybo CSS -->
+     <link rel="stylesheet" type="text/css" href="{% static 'style.css' %}">
+-    <title>Hello, pybo!</title>
++    <title>파이보</title>
+ </head>
+ <body>
+ {% include "navbar.html" %}
+```
+한글이 제대로 출력되는 것을 확인할 수 있다. git diff 명령으로 출력되는 문장에서 - 표시는 삭제되는 부분이고 + 표시는 추가되는 부분을 의미한다.
+### [8] 코드의 변경 내역 되돌리기 - git restore
+만약 코드의 변경 내역을 되돌리고 싶을 때는 git restore 명령을 수행하면 된다.
+```python
+(mysite) c:\projects\mysite>git restore templates/base.html
+```
+git restore 명령 뒤에는 되돌리고 싶은 파일명을 적으면 된다. 파일의 이름은 git status 명령으로 출력된 파일명을 기준으로 적으면 된다. 파이참에서 확인해 보면 변경한 내용이 이전 내용으로 복구되었다는 것을 확인할 수 있다.
+### [9] 변경 내역 커밋하기 - git commit -a
+복구된 templates/base.html 파일의 코드를 다시 <title>파이보</title>로 변경하고 git commit 명령을 수행해 보자.
+```python
+(mysite) c:\projects\mysite>git commit -m "타이틀 변경"
+On branch master
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+        modified:   templates/base.html
+
+no changes added to commit (use "git add" and/or "git commit -a")
+```
+그러면 '변경 내역이 저장되지 않았다'는 메시지와 함께 git add 명령 또는 git commit -a 명령을 수행하라는 메시지가 나타난다. 만약 변경 내역을 커밋하고 싶다면 git add 명령을 진행하고 git commit 명령을 수행하거나 git commit 명령에 -a 옵션을 추가해야 한다. -a 옵션은 커밋할 때 add 명령도 함께 처리하라는 옵션이다. 다음처럼 -a 옵션을 추가하여 변경 내역을 적용하자.
+```python
+(mysite) c:\projects\mysite>git commit -a -m "타이틀 변경"
+[master ef65d4c] 타이틀 변경
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+```
+### [10] 커밋 이력 확인하기 - git log
+깃으로 커밋한 이력을 확인하려면 git log 명령을 입력하면 된다.
+```python
+(mysite) c:\projects\mysite>git log
+commit ef65d4cdce101f46946c894ca7a66336758e5791 (HEAD -> master)
+Author: 박응용 <pahkey@gmail.com>
+Date:   Thu Apr 23 18:49:06 2020 +0900
+
+    타이틀 변경
+
+commit a09254755f3c2c1cb85bb28b179f87b8dd8873f4
+Author: 박응용 <pahkey@gmail.com>
+Date:   Thu Apr 23 18:39:25 2020 +0900
+
+    파이보 프로젝트 최초 커밋
+```
+## 깃허브 가입하고 원격 저장소 사용해 보기
+### [1] 깃허브 가입하기
+깃허브를 사용해 본 적이 없다면 공식 홈페이지에서 회원가입하자. 깃허브 공식 홈페이지에 접속한 다음 오른쪽 위에 있는 <Sign up>을 누르고 이어서 필수 항목을 입력한 다음 <Sign up for Github>를 누르면 된다. 가입 절차가 간단하므로 여기서는 생략한다.
+- 깃허브 공식 홈페이지: github.com
+![](img/4-02_1.png)
+  
+[깃허브 회원가입 화면]
+
+### [2] 깃허브에 원격 저장소 생성하기
+깃허브를 원격 저장소로 사용하려면 파이보의 로컬 저장소와 깃허브의 원격 저장소를 연결해야 한다 . 깃허브에 로그인 하고 <Create repository>를 누르자.
+
+![](img/4-02_2.png)
+
+[저장소 만들기]
+
+이미 깃허브를 사용한다면 'Repositories'의 <New>를 누르자.
+
+![](img/4-02_3.png)
+
+[깃허브를 사용하면서 볼 수 있는 저장소 만들기 버튼]
+
+그러면 원격 저장소를 생성하는 페이지가 나타난다. 'Repository name'에 'pybo'를 입력하고 <Create repository>를 눌러 원격 저장소를 생성하자.
