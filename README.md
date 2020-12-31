@@ -4685,3 +4685,487 @@ Date:   Thu Apr 23 18:39:25 2020 +0900
 [깃허브를 사용하면서 볼 수 있는 저장소 만들기 버튼]
 
 그러면 원격 저장소를 생성하는 페이지가 나타난다. 'Repository name'에 'pybo'를 입력하고 <Create repository>를 눌러 원격 저장소를 생성하자.
+- 현재 필자의 원격 저장소 URL: github.com/pahkey/pybo.git
+- 필자가 만든 원격 저장소 URL의 pahkey는 깃허브 아이디로 자동 생성된 것이므로 여러분의 원격 저장소 URL과 다르다.
+
+## [3] 로컬 저장소와 원격 저장소 연결하고 저장하기
+이제 로컬 저장소와 원격 저장소를 연결하자. C:/projects/mysite 디렉터리에서 git remote add origin <원격 저장소 URL> 명령을 수행하자.
+
+```python
+(mysite) c:\projects\mysite>git remote add origin https://github.com/pahkey/pybo.git
+```
+명령어를 입력할 때에는 아이디(pahkey) 부분에 주의하자. 이어서 git push -u origin master 명령으로 로컬 저장소의 내용을 원격 저장소에 저장하자.
+```python
+(mysite) c:\projects\mysite>git push -u origin master
+Username for 'https://github.com': pahkey
+Password for 'https://pahkey@github.com':
+Enumerating objects: 62, done.
+Counting objects: 100% (62/62), done.
+Delta compression using up to 4 threads
+Compressing objects: 100% (58/58), done.
+Writing objects: 100% (62/62), 85.01 KiB | 3.40 MiB/s, done.
+Total 62 (delta 14), reused 0 (delta 0)
+remote: Resolving deltas: 100% (14/14), done.
+To https://github.com/pahkey/pybo.git
+ * [new branch]      master -> master
+Branch 'master' set up to track remote branch 'master' from 'origin'.
+```
+'Username'과 'Password'를 요구하면 여러분의 깃허브 아이디와 비밀번호를 입력하면 된다. 입력을 마치면 원격 저장소에 로컬 저장소 내용이 저장된다.
+#### git push 명령 입력 시 비밀번호를 묻지 않도록 설정하기
+
+파이보의 코드를 변경한 다음 깃허브에 저장하기 위해 git push 명령을 수행할 때마다 깃허브의 아이디와 비밀번호를 입력해야 한다. 개발이 한창일 때는 이런 작업은 매우 귀찮고 번거롭다. 다음처럼 credential.helper store 옵션을 주면 인증 절차를 생략할 수 있어 한결 편리하다. 물론 최초 인증 절차는 필요하다.
+```python
+(mysite) c:\projects\mysite> git config credential.helper store
+```
+이제 깃허브 홈페이지에 접속해서 원격 저장소에 파일들이 정상적으로 저장되었는지 확인하자.
+
+![](img/4-02_6.png)
+
+[원격 저장소에 저장된 코드]
+
+#### 작업한 내용을 원격 저장소에 저장하는 순서 간단 정리
+
+1.프로그램 변경 작업하기
+
+2.git add <파일명> 또는 git add * 명령 수행하기
+
+3.git commit -m "변경사항 요약" 명령 수행하기
+
+4.git push 명령 수행하기
+## 파이보를 위한 서버 운영 방법 알아보기
+이제 파이보를 서비스하는 방법을 소개할 차례이다. 여러분이 제작한 파이보 서비스를 누구나 사용할 수 있도록 하려면 다른 사람이 인터넷으로 파이보 서비스에 접속할 수 있도록 만들어야 한다. 그런데 그렇게 하려면 1년 365일 쉬지 않고 켜져 있는 서버가 필요하다.
+
+![](img/4-03_1.png)
+
+그림에서 보듯 사용자가 파이보 서비스를 사용하려면 항상 켜져 있는 서버가 필요하다. 사용자는 PC 또는 모바일 기기로 파이보 서비스에 접속하고, 서버는 사용자가 사용하는 기기의 화면으로 파이보 서비스를 보여 준다. 아무튼 중요한 것은 우리에게는 서버가 필요하다는 사실이다. 그러면 서버는 무엇이고 어떻게 운영해야 할까?
+
+## 서버를 직접 운영하기는 무척 힘들다
+서버는 여러분이 흔히 볼 수 있는 PC 본체와 비슷하다. 하지만 서버는 보통 PC보다 너비가 더 크고 납작하며 비싸다. 아무튼 서버를 운영하려면 바로 이 하드웨어를 구매해야 하고 네트워크 장비를 구축한 IDC 센터에 서버를 보내 관리해야 한다. 또한 서버에는 운영체제를 설치해야 한다. 서버의 운영체제는 보통 리눅스 계열을 많이 사용한다. 그리고 서버를 운영하려면 데이터베이스 설치, 네임 서버 설치, 도메인 등록, 백업 등 해야 할 일이 정말 많다.
+
+여러분이 파이보 서비스를 인터넷에 공개하려면 이 모든 것을 해내야 한다. 하지만 혼자서 이 모든 것을 해내기란 정말 어렵다. 아마도 파이보 서비스를 인터넷에 공개하기 전에 서버를 설치하고 관리하는 데 엄청나게 많은 시간을 보내야 할 것이다.
+## 클라우드 시스템을 이용하면 파이보를 쉽게 인터넷에 공개하고 운영할 수 있다
+하지만 절망할 필요는 없다. 이 모든 것을 쉽게 할 수 있도록 도와주는 클라우드 시스템이 등장했기 때문이다. 클라우드 시스템을 사용하면 여러분이 서버를 구입할 필요도 없고 운영체제를 설치할 필요도 없다. 물론 데이터베이스나 네임 서버의 설치, 백업 등도 할 필요가 없다. 클라우드 시스템이 이 모든 것을 다 준비해 놓았기 때문이다.
+
+클라우드 시스템은 네트워크 기반 서비스 형태로 서버를 관리할 수 있도록 해준다. 쉽게 말해 여러분은 클릭 몇 번으로 서버, 운영체제, 데이터베이스 등과 같은 서버를 운용하는 데 필요한 모든 것을 선택하여 설치할 수 있다. 개발자에게 정말 좋은 시절이 찾아온 것이다. 파이보는 클라우드 시스템으로 아마존 웹 서비스(Amazon Web Services), AWS를 사용할 것이다. AWS는 가장 잘 만들어진 클라우드 시스템 중 하나이고 개발자가 되고 싶다면 한 번쯤 경험해 볼 만한 서비스이기 때문이다. AWS에 관심이 있었다면 이번이 사용해 볼 절호의 찬스이다.
+
+- 앞으로 아마존 웹 서비스는 AWS로 줄여서 사용한다.
+## AWS 라이트세일 사용해 보기
+AWS에 관심이 있다면 'AWS는 어렵고 비싸다'라는 말을 많이 들었을 것이다. 하지만 AWS 라이트세일(AWS Lightsail)로 AWS를 쉽고 저렴하게 사용할 수 있다. 여기서는 AWS 라이트세일을 어떻게 사용하는지 알아보자.
+## AWS 라이트세일이란?
+AWS 라이트세일은 아마존에서 운영하는 웹 서비스에 특화된 클라우드 서비스이다. AWS를 처음 시작하려면 공부할 내용이 무척 많다. 하지만 AWS 라이트세일은 웹 서비스 운영에 꼭 필요한 기능만 준비되어 있어 비교적 공부할 내용이 적다. 또한 AWS와 비교하면 AWS 라이트세일은 정말 가성비가 좋다. 처음 1달은 무료이며 그 이후 비용은 월 3.5달러이다. 이렇게 저렴한 비용에 꽤 좋은 웹 서버를 운영할 수 있다. 참고로 비용이 부담스럽다면 AWS 라이트 세일을 1달만 사용하고 삭제하면 추가 요금이 발생하지 않는다. 월 3.5달러로 여러분에게 제공될 서버의 사양은 다음과 같다.
+- AWS 라이트세일 사용 취소는 04-5 가장 마지막 부분에서 안내한다. 우선 안심하고 실습을 진행하자.
+#### AWS 라이트세일의 사양
+* 메모리: 512MB
+* CPU: 1vCPU
+* SSD: 20GB
+* 트래픽: 1TB
+
+이 정도면 서비스 초기 단계에는 충분하다. 물론 사용자가 많아져 트래픽이 많아지면 좀 더 좋은 사양으로 업그레이드해야 한다. AWS 라이트세일은 업그레이드 역시 쉽다.
+## AWS 가입하기
+### [1] AWS 공식 홈페이지에서 계정 생성하기
+AWS 라이트세일을 이용하려면 AWS 계정이 필요하다. 먼저 AWS 공식 홈페이지에서 AWS 계정을 생성하자. AWS 공식 홈페이지에 접속한 다음 <AWS 계정 생성>을 누르자.
+- AWS 공식 홈페이지: aws.amazon.com/ko
+
+![](img/4-04_1.png)
+
+[AWS 홈페이지에서 계정 생성하기]
+
+이어서 '이메일 주소'와 '암호' 그리고 '계정 이름'을 입력하고 <(필수) 동의하고 계정 만들기>를 누른다.
+
+![](img/4-04_2.png)
+
+[AWS 인스턴스 생성]
+
+### [2] 연락처 정보 입력하기
+계속해서 '연락처 정보'를 입력하고 <계정을 만들고 계속 진행>을 누른다. 이때 주소 정보는 반드시 영문으로 입력해야 한다. 영문 주소는 juso.go.kr에 접속해 자신의 집 주소를 검색하고 '영문 보기'를 누르면 쉽게 알 수 있다.
+- 영문 주소는 인터넷 검색 창에서 '영문주소 변환'을 검색하면 쉽게 찾을 수 있다.
+
+![](img/4-04_3.png)
+
+[인스턴스 생성 과정]
+
+### [3] 결제 정보 입력하기 - 해외 결제 가능한 신용카드 또는 체크카드 필요
+'결제 정보'를 입력한 다음 <검증 및 추가>를 누르자. 참고로 계정을 생성하려면 해외 결제 가능한 신용카드 또는 체크카드가 필요하다. 결제 정보를 입력할 때 카드 인증을 위해 1달러가 자동으로 결제된다. 출금된 1달러는 1~2주 이내에 다시 입금되니 안심하자. 만약 이 과정이 어려운 학생이라면 부모님께 부탁드리자.
+
+![](img/4-04_4.png)
+
+[인스턴스 생성 과정]
+
+![](img/4-04_5.png)
+
+![](img/4-04_6.png)
+
+![](img/4-04_7.png)
+
+![](img/4-04_8.png)
+
+### 콘솔에 로그인하기
+
+![](img/4-04_9.png)
+
+[콘솔 로그인 과정 1]
+
+![](img/4-04_10.png)
+
+[콘솔 로그인 과정 2]
+
+## AWS 라이트세일 인스턴스 생성하기
+AWS 계정 생성을 마쳤다면 AWS 라이트세일을 사용할 수 있다. AWS에 로그인하여 다음 단계를 순서대로 따라 해보자. 혹시 언어 설정이 나오면 <한국어>를 선택하자.
+
+### [1] AWS 라이트세일 공식 홈페이지에 접속하기
+AWS 공식 홈페이지에서 계정을 생성했으니 AWS에 로그인한 후 라이트세일 홈페이지에 접속하자.
+
+- AWS 라이트세일 공식 홈페이지: lightsail.aws. amazon.com
+
+## 서버에 접속하여 필요한 도구 설치하기
+### [1] 서버에 접속하기
+먼저 AWS에 로그인해 lightsail.aws.amazon.com에 접속하자. 다음 화면이 나타나면 여러분의 인스턴스에 있는 명령 프롬프트 아이콘을 누르자. 그러면 익숙한 명령 프롬프트 창이 나타난다.
+
+![](img/4-05_1.png)
+
+[인스턴스에서 명령 프롬프트 아이콘 누르기]
+
+![](img/4-05_2.png)
+
+[인스턴스에서 명령 프롬프트, 터미널]
+
+앞으로 서버에 필요한 모든 작업은 여기서 진행된다고 생각하면 된다. 그런데 여러분이 보고있는 AWS의 명령 프롬프트 창은 사실 매우 불편하다. 04-7절에서 mobaXterm을 사용하는 편리한 방법을 소개한다. 지금은 공부한다는 생각으로 사용해 보자.
+
+### [2] 현재 시간 확인해 보고 우리나라 시간으로 서버 설정하기
+터미널에서 date 명령을 사용해 보자. 그러면 우리나라 시간이 아닌 UTC 시간이 출력된다.
+
+```python
+ubuntu@ip-172-26-12-247:~$ date
+Sun Apr 26 06:56:34 UTC 2020
+```
+참고로 UTC 시간은 국제 표준 시간이므로, 파이보 게시물의 등록 시간을 우리나라 시간으로 맞추려면 설정을 바꿔야 한다.
+
+- 앞으로 '터미널'이라고 표시된 부분은 AWS 서버에 접속한 터미널에서 실행함을 의미한다.
+
+한국 시간으로 설정하기 위해 다음 명령을 수행하자.
+```python
+ubuntu@ip-172-26-12-247:~$ sudo ln -sf /usr/share/zoneinfo/Asia/Seoul /etc/localtime
+```
+다시 date 명령을 수행하면 우리나라 시간으로 출력된다. 여러분의 시계와 비교하여 맞는지 확인해 보자.
+```python
+ubuntu@ip-172-26-12-247:~$ date
+Sun Apr 26 16:07:21 KST 2020
+```
+### [3] 서버에 파이썬이 설치되어 있는지 확인하기
+장고를 사용하려면 파이썬이 반드시 설치되어 있어야 한다. 서버에 파이썬이 설치되어 있는지 python 명령을 입력해 보자.
+```python
+ubuntu@ip-172-26-12-247:~$ python
+
+Command 'python' not found, but can be installed with:
+
+sudo apt install python3       
+sudo apt install python        
+sudo apt install python-minimal
+
+You also have python3 installed, you can run 'python3' instead.
+```
+'python3를 입력하라'는 메시지가 나타나면 python3 명령을 입력해 보자.
+```python
+ubuntu@ip-172-26-14-223:~$ python3
+Python 3.8.2 (default, Apr 27 2020, 15:53:34)
+[GCC 9.3.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+>>>
+```
+그러면 파이썬 셸이 실행된다. 그렇다. 파이썬이 정상으로 설치되어 있다는 것을 확인했으니 exit()를 실행하여 파이썬 셸을 종료하자.
+### [4] 가상 환경 설정하기
+가상 환경 설정 패키지를 설치하기 전에 다음과 같이 sudo apt update 명령을 수행하여 우분투 패키지를 최신으로 업그레이드하자.
+```python
+ubuntu@ip-172-26-14-223:~$ sudo apt update
+Hit:1 http://ap-northeast-2.ec2.archive.ubuntu.com/ubuntu focal InRelease
+(... 생략 ...)
+Fetched 17.7 MB in 7s (2648 kB/s)
+Reading package lists... Done
+Building dependency tree
+Reading state information... Done
+137 packages can be upgraded. Run 'apt list --upgradable' to see them.
+```
+이어서 우분투에서 가상 환경을 사용할 수 있도록 'python3-venv' 패키지를 설치하자. 이때 질문 창이 나타나면 모두 <Enter>를 눌러 진행하자. 그리고 홈 디렉터리(/home/ubuntu) 하위에 필요한 projects, venvs 디렉터리를 생성하자.
+- ubuntu@ip-172-26-14-223:~$ 프롬프트에서 '~'는 홈 디렉터리인 /home/ubuntu를 의미한다.
+```python
+ubuntu@ip-172-26-14-223:~$ sudo apt install python3-venv
+Reading package lists... Done
+Building dependency tree
+(... 생략 ...)
+ubuntu@ip-172-26-14-223:~$ mkdir projects
+ubuntu@ip-172-26-14-223:~$ mkdir venvs
+ubuntu@ip-172-26-14-223:~$ ls
+projects venvs
+```
+이어서 venvs 디렉터리로 이동해 장고 가상 환경을 생성하자.
+```python
+ubuntu@ip-172-26-12-247:~$ cd venvs
+ubuntu@ip-172-26-12-247:~/venvs$ python3 -m venv mysite
+ubuntu@ip-172-26-12-247:~/venvs$ 
+```
+이어서 가상 환경으로 진입하자.
+```python
+ubuntu@ip-172-26-12-247:~/venvs$ cd mysite
+ubuntu@ip-172-26-12-247:~/venvs/mysite$ cd bin
+ubuntu@ip-172-26-12-247:~/venvs/mysite/bin$ . activate
+(mysite) ubuntu@ip-172-26-12-247:~/venvs/mysite/bin$
+```
+/home/ubuntu/venvs/mysite/bin 디렉터리로 이동해 . activate 명령을 수행하면 가상환경으로 진입할 수 있다. 만약 가상 환경에서 벗어나려면 아무 곳에서나 deactivate 명령을 수행하면 된다.
+- activate 명령은 '.' 과 'activate' 사이에 공백이 있다.
+
+### [5] wheel 패키지 설치하기
+서버 환경에서는 pip으로 파이보 관련 패키지를 설치하면 'wheel 패키지 관련 오류'가 발생할 수 있다. 그러므로 pip install wheel 명령으로 wheel 패키지를 먼저 설치하자.
+```python
+(mysite) ubuntu@ip-172-26-14-223:~/venvs/mysite/bin$ pip install wheel
+```
+그리고 django를 비롯해 필요한 패키지를 설치하자.
+```python
+(mysite) ubuntu@ip-172-26-12-247:~/venvs/mysite/bin$ pip install django==3.1.3
+(mysite) ubuntu@ip-172-26-12-247:~/venvs/mysite/bin$ pip install markdown
+```
+## 파이보 설치
+파이보 관련 파일은 깃허브 원격 저장소에 저장되어 있다. 그러니 서버에서 깃을 이용하면 파이보 관련 파일을 쉽게 내려받을 수 있다.
+### [1] projects 디렉터리에서 원격 저장소의 파일 내려받기
+projects 디렉터리로 이동하자.
+```python
+(mysite) ubuntu@ip-172-26-12-247:~/venvs/mysite/bin$ cd ~/projects
+```
+깃으로 파이보 관련 파일을 내려받으려면 여러분의 깃허브 원격 저장소 URL을 알아야 한다. 원격 저장소 URL을 미리 복사하자.
+- URL에 표시된 'pahkey'는 필자의 깃허브 아이디이다. 'pahkey' 대신 여러분의 아이디를 사용해야 한다.
+
+![](img/4-05_3.png)
+
+[원격 저장소의 URL 복사하기]
+
+URL을 확인한 뒤 서버에서 git 명령어로 파이보 관련 파일을 내려받자. 이때 git clone https://github.com/pahkey/pybo.git mysite와 같이 맨 뒤에 mysite를 반드시 입력하자.
+
+- 혹시 이 과정을 수행하느라 서버 연결이 종료될 수 있다. 그런 경우에는 <다시 연결>을 눌러 서버를 다시 실행하자. 다시 연결하면 가상 환경이 해제되므로 가상 환경 진입도 반드시 다시 해야 한다
+
+```python
+(mysite) ubuntu@ip-172-26-12-247:~/projects$ git clone https://github.com/pahkey/pybo.git mysite
+Cloning into 'mysite'...
+remote: Enumerating objects: 62, done.
+remote: Counting objects: 100% (62/62), done.
+remote: Compressing objects: 100% (44/44), done.
+remote: Total 62 (delta 14), reused 62 (delta 14), pack-reused 0
+Unpacking objects: 100% (62/62), done.
+```
+ls 명령을 수행해 보면 mysite 디렉터리가 생성되었음을 확인할 수 있다.
+```python
+(mysite) ubuntu@ip-172-26-12-247:~/projects$ ls
+mysite
+```
+## 파이보 실행
+### [1] 데이터베이스 초기화하기
+이제 다음처럼 mysite 디렉터리에 진입한 후 장고 서버를 실행해 보자.
+
+```python
+(mysite) ubuntu@ip-172-26-12-247:~/projects$ cd mysite
+(mysite) ubuntu@ip-172-26-12-247:~/projects/mysite$ python manage.py runserver
+Watching for file changes with StatReloader
+Performing system checks...
+
+System check identified no issues (0 silenced).
+
+You have 23 unapplied migration(s). Your project may not work properly until you apply the migrations for app(s): admin, auth, contenttypes, pybo, sessions.
+Run 'python manage.py migrate' to apply them.
+
+April 23, 2020 - 19:48:24
+Django version 3.0.5, using settings 'config.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+```
+장고 서버는 실행되지만, python manage.py migrate 명령을 수행하라는 메시지를 볼 수 있다. <Ctrl+C> 키를 입력하여 장고 서버를 종료하고 다음과 같이 migrate 명령을 수행하자.
+```python
+(mysite) ubuntu@ip-172-26-12-247:~/projects/mysite$ python manage.py migrate
+Operations to perform:
+  Apply all migrations: admin, auth, contenttypes, pybo, sessions
+Running migrations:
+  Applying contenttypes.0001_initial... OK
+  Applying auth.0001_initial... OK
+  Applying admin.0001_initial... OK
+  (... 생략 ...)
+  Applying pybo.0006_auto_20200423_1358... OK
+  Applying sessions.0001_initial... OK
+```
+### [2] 장고 서버 실행하기
+이제 다시 장고 서버를 실행하자. 아무 이상 없이 잘 구동될 것이다.
+```python
+(mysite) ubuntu@ip-172-26-12-247:~/projects/mysite$ python manage.py runserver
+Watching for file changes with StatReloader
+Performing system checks...
+
+System check identified no issues (0 silenced).
+April 23, 2020 - 19:49:27
+Django version 3.0.5, using settings 'config.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+```
+## 고정 IP 생성하기
+이렇게 서버에 구동된 파이보 서비스(장고 서버)에 접속하려면 고정 IP가 필요하다. AWS 라이트세일에서 고정 IP를 생성해 보자.
+### [1] 고정 IP 생성 메뉴로 이동하기
+AWS 라이트세일의 메인 화면에서 [네트워킹] 탭으로 이동해 <고정 IP 생성>을 누른다.
+
+![](img/4-05_4.png)
+
+[고정 IP 생성 화면]
+### [2] 고정 IP 인스턴스에 연결하기
+인스턴스 선택에서 [Ubuntu-1]을 선택하고 고정 IP명을 입력한 뒤 <생성>을 눌러 고정 IP를 생성하자. 필자의 경우 '3.35.153.92'라는 고정 IP가 생성되었다.
+
+- 고정 IP명은 원하는 이름으로 설정해도 된다. 여기서는 기본값으로 제시된 StaticIp-1을 사용했다.
+
+![](img/4-05_5.png)
+
+[인스턴스 선택하고 생성하기]
+
+![](img/4-05_6.png)
+
+[퍼블릭 고정 IP 주소를 확인하는 화면]
+
+## 방화벽 설정하고 파이보 서버에 접속해 보기
+### [1] 인스턴스에 접속 포트 번호 설정하기
+우리의 파이보 서버(인스턴스)는 포트 번호가 8000번이다. 그래서 외부에서 8000번 포트로 접속하려면 '방화벽 해제 작업'을 해야 한다. AWS 라이트세일의 메인 화면에서 [인스턴스] 탭을 선택한 뒤 다음처럼 <Ubuntu-1>을 클릭하자.
+- HTTP 기본 포트인 80번 포트에서 서비스하는 방법은 04-10에서 알아본다.
+
+![](img/4-05_7.png)
+
+[인스턴스 선택하기]
+
+이어서 [네트워킹] 탭을 선택하고 <+규칙 추가>를 클릭한다.
+
+![](img/4-05_8.png)
+
+[방화벽 규칙 추가 화면]
+
+다음처럼 포트 번호 '8000'을 입력하고 생성한다.
+
+![](img/4-05_9.png)
+
+[포트 번호 추가 화면]
+
+### [2] 장고 서버 다시 구동하기
+그리고 인스턴스 터미널로 돌아와 python manage.py runserver 0:8000 명령을 실행하여 장고 서버를 다시 구동하자. 이때 runserver 명령 뒤에 0:8000이라는 파라미터를 붙였다. 0:8000에서 0의 의미는 '외부에서 이 서버에 접속할 수 있도록 아이피를 개방한다'는 의미이며 :8000의 의미는 8000번 포트로 접속을 허용한다는 의미이다.
+```python
+(mysite) ubuntu@ip-172-26-12-247:~/projects/mysite$ python manage.py runserver 0:8000
+Watching for file changes with StatReloader
+Performing system checks...
+
+System check identified no issues (0 silenced).
+April 23, 2020 - 19:50:05
+Django version 3.0.5, using settings 'config.settings'
+Starting development server at http://0:8000/
+Quit the server with CONTROL-C.
+```
+#### 장고 서버가 종료되지 않은 상태에서 터미널이 종료되었다면?
+
+장고 서버가 종료되지 않은 상태에서 다음처럼 터미널이 종료되었다면 이미 실행 중인 장고 서버 프로세스를 종료해야 한다.
+
+![](img/4-05_10.png)
+
+[터미널 연결이 해제된 모습]
+
+<다시 연결>을 눌러 터미널에 다시 접속한 뒤 다음처럼 따라 해보자. 가상 환경에 진입하고 프로젝트 루트 디렉터리인 ~/projects/mysite로 이동하자.
+
+```python
+ubuntu@ip-172-26-14-223:~$ cd ~/venvs/mysite/bin
+ubuntu@ip-172-26-14-223:~/venvs/mysite/bin$ . activate
+(mysite) ubuntu@ip-172-26-14-223:~/venvs/mysite$ cd ~/projects/mysite
+(mysite) ubuntu@ip-172-26-14-223:~/projects/mysite$
+```
+그리고 기존에 실행한 장고 서버를 종료하기 위해 다음과 같이 killall python 명령을 수행한 후 서버를 다시 실행하자.
+```python
+(mysite) ubuntu@ip-172-26-14-223:~/projects/mysite$ killall python
+(mysite) ubuntu@ip-172-26-14-223:~/projects/mysite$ python manage.py runserver 0:8000
+Watching for file changes with StatReloader
+Performing system checks...
+
+System check identified no issues (0 silenced).
+December 03, 2020 - 17:51:19
+Django version 3.1.3, using settings 'config.settings'
+Starting development server at http://0:8000/
+Quit the server with CONTROL-C.
+```
+만약 killall python 명령을 수행하지 않고 장고 서버를 실행하면 다음과 같은 오류가 발생할 수 있다.
+```python
+(mysite) ubuntu@ip-172-26-14-223:~/venvs/mysite$ python manage.py runserver 0:8000
+Watching for file changes with StatReloader
+Performing system checks...
+
+System check identified no issues (0 silenced).
+April 13, 2020 - 11:49:18
+Django version 3.0.5, using settings 'mysite.settings'
+Starting development server at http://0:8000/
+Quit the server with CONTROL-C.
+Error: That port is already in use.
+```
+### [3] 서버에서 장고 서비스 가능하도록 설정하기
+장고 서버를 실행하고 이제 웹 브라우저에서 3.35.153.92:8000 URL로 접속해 보자.
+- '3.35.153.92'는 필자의 고정 아이피이므로 여러분의 고정 아이피를 입력하자.
+
+그러면 화면에 다음과 같은 오류가 표시될 것이다.
+
+![](img/4-05_11.png)
+
+[ALLOWED_HOSTS를 설정하지 않은 경우 나타나는 오류]
+
+장고 서버를 외부에 서비스하려면 settings.py 파일의 ALLOWED_HOSTS 항목을 반드시 설정해야 하는데 설정이 되어 있지 않아서 발생하는 오류이다. 장고의 ALLOWED_HOSTS는 보안과 관련된 항목으로 장고 서버가 실행 가능한 호스트를 등록하는 설정 항목이다. 호스트 등록을 위해 다음처럼 settings.py 파일을 수정하도록 하자.
+
+- settings.py 파일 수정은 서버가 아닌 여러분의 PC에서 해야 한다.
+
+```python
+...
+# ---------------------------------- [edit] ---------------------------------- #
+ALLOWED_HOSTS = ['3.35.153.92']
+# ---------------------------------------------------------------------------- #
+...
+```
+ALLOWED_HOSTS에 고정 아이피인 '3.35.153.92'을 추가해 주었다. '3.35.153.92'은 필자의 고정 아이피이므로 여러분의 고정 아이피를 입력하자. 로컬에서 수정한 파일을 서버에 적용하려면 다음과 같은 과정이 필요하다.
+
+우선 여러분의 데스크톱 환경으로 돌아와 다음과 같이 깃허브에 변경된 내용을 저장한다.
+
+```python
+(mysite) c:\projects\mysite>git add *
+(mysite) c:\projects\mysite>git commit -m "ALLOWD_HOSTS 변경"
+(mysite) c:\projects\mysite>git push
+```
+그리고 AWS 터미널로 다시 돌아와 git pull 명령으로 깃허브에서 변경된 내용을 가져온다.
+```python
+(mysite) ubuntu@ip-172-26-14-223:~/projects/mysite$ git pull
+```
+git pull 명령 실행 시 여러분의 PC와 마찬가지로 깃허브 인증이 필요하다. 하지만 여러분의 PC와 마찬가지로 git config credential.helper store 명령을 수행하면 인증 절차를 생략할 수 있다.
+```python
+(mysite) ubuntu@ip-172-26-12-247:~/projects/mysite$ git config credential.helper store
+```
+### [4] 고정 IP로 파이보에 접속해 보기
+서버에서 다시 장고 서버를 실행하자.
+```python
+(mysite) ubuntu@ip-172-26-12-247:~/projects/mysite$ python manage.py runserver 0:8000
+Watching for file changes with StatReloader
+Performing system checks...
+
+System check identified no issues (0 silenced).
+April 13, 2020 - 11:49:41
+Django version 3.0.5, using settings 'mysite.settings'
+Starting development server at http://0:8000/
+Quit the server with CONTROL-C.
+```
+그리고 여러분의 컴퓨터에서 웹 브라우저를 실행하고 앞서 설정한 고정 IP에 포트 번호를 붙여(3.35.153.92:8000) 접속해 보자. 그러면 다음 화면을 볼 수 있다.
+
+![](img/4-05_12.png)
+
+[고정 IP로 접속한 파이보]
+
+이제부터 누구나 웹 브라우저에서 3.35.153.92:8000을 입력하면 여러분의 파이보 서비스를 사용할 수 있다. 여러분이 만든 서비스가 세상에 공개되는 순간이다. 축하한다!
+#### AWS 인스턴스와 고정 IP 삭제하여 의도하지 않은 요금 발생 막기
+
+AWS 라이트세일 인스턴스는 1달간 무료로 사용할 수 있고 이후엔 비용이 발생한다. 이를 원치 않는다면 인스턴스와 고정 IP를 삭제해야 한다. 인스턴스는 다음처럼 AWS 라이트세일 홈페이지 화면의 [인스턴스] 탭에서 삭제할 수 있다
+
+![](img/4-05_13.png)
+
+[인스턴스 삭제 화면]
+
+고정 IP는 다음처럼 [네트워킹] 탭에서 삭제할 수 있다.
+
+![](img/4-05_14.png)
+
+[고정 IP 삭제 화면]
